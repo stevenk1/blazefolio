@@ -11,6 +11,9 @@ builder.Services.AddMudServices();
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+    
+// Register ErrorHandler service
+builder.Services.AddScoped<BlazeFolio.Services.ErrorHandler>();
 
 // Add application services
 builder.Services.AddApplication();

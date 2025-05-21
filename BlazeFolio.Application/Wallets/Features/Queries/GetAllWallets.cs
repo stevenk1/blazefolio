@@ -19,7 +19,7 @@ public record GetAllWallets() : IRequest<Result<List<Wallet>>>;
         public async Task<Result<List<Wallet>>> Handle(GetAllWallets request, CancellationToken cancellationToken)
         {
             var wallets = await _walletRepository.GetAllAsync();
-            return   Result.Success(wallets);;
+            return Result.Success(wallets);
         }
     
 }

@@ -1,0 +1,13 @@
+.mud-table-head, .mud-th {
+    background-color: #dff7f8 !important;
+    border-bottom: none !important;
+}
+
+/* Style for the content cells */
+.mud-table-empty-row {
+    background-color: #eafbfc!important; 
+}
+
+.mud-table-cell {
+    border-bottom: none !important;
+}

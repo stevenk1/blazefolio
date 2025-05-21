@@ -21,4 +21,9 @@
     <ItemGroup>
       <_ContentIncludedByDefault Remove="wwwroot\images\logo.png" />
     </ItemGroup>
+
+
+    <ItemGroup>
+      <Content Remove="Components\Pages\Dashboard.razor" />
+    </ItemGroup>
 </Project>

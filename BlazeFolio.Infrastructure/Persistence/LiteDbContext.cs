@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using BlazeFolio.Domain.WalletAggregate.ValueObjects;
 using BlazeFolio.Infrastructure.Persistence.Models;
 using LiteDB;
@@ -16,7 +17,56 @@ public class LiteDbContext : IDisposable
         // Register custom mappings for value objects
         RegisterCustomMappings(mapper);
         
+        // Check if the database file exists and create directory if needed
+        EnsureDatabaseDirectoryExists(connectionString);
+        
         _database = new LiteDatabase(connectionString, mapper);
+        
+        // Initialize database collections if needed
+        InitializeCollections();
+    }
+
+    private static void EnsureDatabaseDirectoryExists(string connectionString)
+    {
+        try
+        {
+            // Extract file path from connection string
+            // Connection string format is typically: "filename=path/to/database.db;..."
+            var parts = connectionString.Split(';');
+            string filePath = null;
+            
+            foreach (var part in parts)
+            {
+                if (part.Trim().StartsWith("filename=", StringComparison.OrdinalIgnoreCase))
+                {
+                    filePath = part.Substring("filename=".Length).Trim();
+                    break;
+                }
+            }
+            
+            if (!string.IsNullOrEmpty(filePath))
+            {
+                var directory = Path.GetDirectoryName(filePath);
+                if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            // Log the exception or handle it as needed
+            Console.WriteLine($"Error ensuring database directory exists: {ex.Message}");
+        }
+    }
+
+    private void InitializeCollections()
+    {
+        // Ensure collections are created
+        var wallets = _database.GetCollection<WalletModel>("wallets");
+        
+        // Create any necessary indexes
+        wallets.EnsureIndex(x => x.Id);
     }
 
     private static void RegisterCustomMappings(BsonMapper mapper)

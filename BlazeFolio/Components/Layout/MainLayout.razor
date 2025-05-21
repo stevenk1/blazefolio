@@ -7,7 +7,7 @@
 <MudLayout>
     <MudAppBar Elevation="1">
         <div class="d-flex align-center ml-3">
-            <MudText Typo="Typo.h5">BlazeFolio</MudText>
+            <MudText Typo="Typo.h5"><b>BlazeFolio</b></MudText>
         </div>
         <MudSpacer />
         <MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End" />
@@ -24,7 +24,7 @@
 </div>
 
 @code {
-    private MudTheme _theme = null;
+    private MudTheme? _theme;
 
     protected override void OnInitialized()
     {

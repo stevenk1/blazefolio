@@ -1,57 +1,54 @@
-@page "/wallets"
-@using BlazeFolio.Components.Shared
+@page "/"
 @using MediatR
 @using BlazeFolio.Application.Wallets.Features.Queries
-@using BlazeFolio.Domain.WalletAggregate
-@using BlazeFolio.Application.Wallets.Features.Commands
-@using Microsoft.AspNetCore.Components.Forms
-@using BlazeFolio.Application.Wallets.Features.Commands
-@using Microsoft.AspNetCore.Components.Forms
+@using BlazeFolio.Services
 @inject IMediator Mediator
-@inject ISnackbar Snackbar
+@inject ErrorHandler ErrorHandler
 
 <PageTitle>Wallets</PageTitle>
 
-<InfoSection>Add new wallets, view balances, and track your assets.</InfoSection>
+<div Class="mb-4 mt-4">
+    <MudText Typo="Typo.h6">Wallets</MudText>
+    <MudText Typo="Typo.body1">
+      Manage your wallets and track your balances in real time</MudText>
+</div>
 
-<MudCard Elevation="0" Class="mb-4">
-    <MudCardHeader>
-        <MudText Typo="Typo.h5">Your Wallets</MudText>
-    </MudCardHeader>
-    <MudCardContent>
-        <MudTable Items="@_wallets" Hover="true" Elevation="0" Loading="@_loading">
-            <HeaderContent>
-                <MudTh>Name</MudTh>
-                <MudTh>Type</MudTh>
-                <MudTh>Address</MudTh>
-                <MudTh>Balance</MudTh>
-                <MudTh>Actions</MudTh>
-            </HeaderContent>
-            <RowTemplate Context="wallet">
-                <MudTd>@wallet.Name</MudTd>
-                <MudTd>@wallet.Type</MudTd>
-                <MudTd>@wallet.Address</MudTd>
-                <MudTd>@wallet.Balance @wallet.Symbol</MudTd>
-                <MudTd>
-                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" />
-                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" />
-                </MudTd>
-            </RowTemplate>
-            <NoRecordsContent>
-                <MudText>No wallets found. Add your first wallet to get started.</MudText>
-            </NoRecordsContent>
-        </MudTable>
-    </MudCardContent>
-    <MudCardActions>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add">Add Wallet</MudButton>
-    </MudCardActions>
-</MudCard>
+<MudTable Items="@_wallets" Hover="true" Elevation="0" Loading="@_loading">
+    <HeaderContent >
+        <MudTh>Name</MudTh>
+        <MudTh>Type</MudTh>
+        <MudTh>Address</MudTh>
+        <MudTh>Balance</MudTh>
+        <MudTh>Actions</MudTh>
+    </HeaderContent>
+    <RowTemplate Context="wallet">
+        <MudTd>@wallet.Name</MudTd>
+        <MudTd>@wallet.Type</MudTd>
+        <MudTd>@wallet.Address</MudTd>
+        <MudTd>@wallet.Balance @wallet.Symbol</MudTd>
+        <MudTd>
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Rounded="true"/>
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" Rounded="true"/>
+        </MudTd>
+    </RowTemplate>
+    <NoRecordsContent>
+        <div class="d-flex flex-column align-center justify-center py-4">
+            <MudIcon Icon="@Icons.Material.Filled.Wallet" Size="Size.Large" Color="Color.Secondary"
+                     Class="mb-3"/>
+            <MudText Class="mb-3">No wallets found. Add your first wallet to get started.</MudText>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" Size="Size.Medium" Rounded="true">
+                Add Wallet
+            </MudButton>
+        </div>
+    </NoRecordsContent>
+</MudTable>
+
 
 
 @code {
     private List<WalletDisplay> _wallets = new();
     private bool _loading = true;
-  
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -61,12 +58,12 @@
     private async Task LoadWalletsAsync()
     {
         _loading = true;
-        
+
         try
         {
             var result = await Mediator.Send(new GetAllWallets());
-            
-            if (result.IsSuccess && result.Value != null)
+
+            if (result is { IsSuccess: true, Value: not null })
             {
                 _wallets = result.Value.Select(wallet => new WalletDisplay
                 {
@@ -82,9 +79,8 @@
         }
         catch (Exception ex)
         {
-            // Show error in a toaster notification
-            Snackbar.Add($"Error loading wallets: {ex.Message}", Severity.Error);
-            Console.Error.WriteLine($"Error loading wallets: {ex.Message}");
+            // Use the global error handler
+            ErrorHandler.HandleException(ex, "Error loading wallets", "Wallets.LoadWalletsAsync");
         }
         finally
         {
@@ -92,8 +88,7 @@
         }
     }
 
-    
-    
+
     private class WalletDisplay
     {
         public string Id { get; set; } = string.Empty;
@@ -103,4 +98,5 @@
         public decimal Balance { get; set; }
         public string Symbol { get; set; } = string.Empty;
     }
+
 }
