@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+    </PropertyGroup>
+
+
+    <ItemGroup>
+        <PackageReference Include="MudBlazor" Version="8.*"/>
+    </ItemGroup>
+
+
+    <ItemGroup>
+      <ProjectReference Include="..\BlazeFolio.Application\BlazeFolio.Application.csproj" />
+      <ProjectReference Include="..\BlazeFolio.Infrastructure\BlazeFolio.Infrastructure.csproj" />
+    </ItemGroup>
+
+
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="wwwroot\images\logo.png" />
+    </ItemGroup>
+</Project>

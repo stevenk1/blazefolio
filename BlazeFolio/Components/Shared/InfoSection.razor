@@ -1,0 +1,14 @@
+<MudPaper Elevation="0" Class="pa-4 mb-4 mt-4">
+    <MudGrid>
+        <MudItem xs="12" md="12">
+            <MudText Typo="Typo.body1">
+               @ChildContent
+            </MudText>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+@code {
+    [Parameter]
+    public required RenderFragment ChildContent { get; set; }
+}
