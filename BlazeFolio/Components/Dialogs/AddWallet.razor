@@ -1,0 +1,86 @@
+@using BlazeFolio.Application.Wallets.Features.Commands
+@using BlazeFolio.Services
+@using MediatR
+@inject IMediator Mediator
+@inject ErrorHandler ErrorHandler
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudContainer Style="max-width: 500px;">
+            
+            <MudForm @ref="_form" Model="@_walletModel" @bind-IsValid="@_isValid">
+                <MudTextField T="string" 
+                              @bind-Value="_walletModel.Name" 
+                              Label="Wallet Name" 
+                              Required="true" 
+                              RequiredError="Name is required"
+                              Class="mb-3"/>
+            </MudForm>
+        </MudContainer>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit" Disabled="@(!_isValid)" Variant="Variant.Filled">Add Wallet</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+    
+    private MudForm _form = null!;
+    private bool _isValid;
+    private bool _processing;
+    
+    private WalletModel _walletModel = new();
+    
+    private class WalletModel
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Symbol { get; set; } = "BTC";
+    }
+    
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+    
+    private async Task Submit()
+    {
+        if (!_isValid || _processing) 
+            return;
+        
+        _processing = true;
+        
+        try
+        {
+            var command = new AddWalletCommand
+            {
+                Name = _walletModel.Name,
+                // Note: Adjust the actual command properties based on what AddWalletCommand accepts
+                // The command might need adjustments if it has different properties
+            };
+            
+            var result = await Mediator.Send(command);
+            
+            if (result.IsSuccess)
+            {
+                Snackbar.Add("Wallet added successfully", MudBlazor.Severity.Success);
+                MudDialog.Close(DialogResult.Ok(result.Value));
+            }
+            else
+            {
+                Snackbar.Add(result.Error, MudBlazor.Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleException(ex, "Error adding wallet", "AddWallet.Submit");
+            Snackbar.Add("Failed to add wallet", MudBlazor.Severity.Error);
+        }
+        finally
+        {
+            _processing = false;
+        }
+    }
+}

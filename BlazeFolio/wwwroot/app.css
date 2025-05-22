@@ -4,7 +4,7 @@
 }
 
 /* Style for the content cells */
-.mud-table-empty-row {
+.mud-table-empty-row, .mud-table-body {
     background-color: #eafbfc!important; 
 }
 

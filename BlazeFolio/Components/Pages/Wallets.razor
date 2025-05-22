@@ -2,30 +2,39 @@
 @using MediatR
 @using BlazeFolio.Application.Wallets.Features.Queries
 @using BlazeFolio.Services
+@using System.Linq
 @inject IMediator Mediator
 @inject ErrorHandler ErrorHandler
+@inject IDialogService DialogService
 
 <PageTitle>Wallets</PageTitle>
 
-<div Class="mb-4 mt-4">
-    <MudText Typo="Typo.h6">Wallets</MudText>
-    <MudText Typo="Typo.body1">
-      Manage your wallets and track your balances in real time</MudText>
+<div Class="mb-4 mt-4 d-flex justify-space-between align-center">
+    <div>
+        <MudText Typo="Typo.h6">Wallets</MudText>
+        <MudText Typo="Typo.body1">
+          Manage your wallets and track your balances in real time</MudText>
+    </div>
+    @if (_wallets.Any())
+    {
+        <MudButton Color="Color.Primary" 
+                  Variant="Variant.Filled" 
+                  StartIcon="@Icons.Material.Filled.Add" 
+                  Size="Size.Medium" 
+                  Rounded="true"
+                  OnClick="OpenAddWalletDialog">
+            Add Wallet
+        </MudButton>
+    }
 </div>
 
 <MudTable Items="@_wallets" Hover="true" Elevation="0" Loading="@_loading">
     <HeaderContent >
         <MudTh>Name</MudTh>
-        <MudTh>Type</MudTh>
-        <MudTh>Address</MudTh>
-        <MudTh>Balance</MudTh>
         <MudTh>Actions</MudTh>
     </HeaderContent>
     <RowTemplate Context="wallet">
         <MudTd>@wallet.Name</MudTd>
-        <MudTd>@wallet.Type</MudTd>
-        <MudTd>@wallet.Address</MudTd>
-        <MudTd>@wallet.Balance @wallet.Symbol</MudTd>
         <MudTd>
             <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Rounded="true"/>
             <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" Rounded="true"/>
@@ -36,7 +45,12 @@
             <MudIcon Icon="@Icons.Material.Filled.Wallet" Size="Size.Large" Color="Color.Secondary"
                      Class="mb-3"/>
             <MudText Class="mb-3">No wallets found. Add your first wallet to get started.</MudText>
-            <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" Size="Size.Medium" Rounded="true">
+            <MudButton Color="Color.Primary" 
+                      Variant="Variant.Filled" 
+                      StartIcon="@Icons.Material.Filled.Add" 
+                      Size="Size.Medium" 
+                      Rounded="true"
+                      OnClick="OpenAddWalletDialog">
                 Add Wallet
             </MudButton>
         </div>
@@ -69,11 +83,7 @@
                 {
                     Id = wallet.Id.Value.ToString(),
                     Name = wallet.Name,
-                    // For demo purposes, using placeholders for fields not in the domain model
-                    Type = "Crypto",
-                    Address = $"{wallet.Id.Value.ToString()[..8]}...",
                     Balance = 0.00m,
-                    Symbol = "BTC"
                 }).ToList();
             }
         }
@@ -88,15 +98,23 @@
         }
     }
 
+    private async Task OpenAddWalletDialog()
+    {
+        var dialog = await DialogService.ShowAsync<Dialogs.AddWallet>("Add New Wallet");
+        var result = await dialog.Result;
+        
+        if (!result.Canceled)
+        {
+            // Reload wallets to show the newly added wallet
+            await LoadWalletsAsync();
+        }
+    }
 
     private class WalletDisplay
     {
         public string Id { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
-        public string Type { get; set; } = string.Empty;
-        public string Address { get; set; } = string.Empty;
         public decimal Balance { get; set; }
-        public string Symbol { get; set; } = string.Empty;
     }
 
 }
