@@ -11,3 +11,7 @@
 .mud-table-cell {
     border-bottom: none !important;
 }
+
+.mud-dialog {
+    background-color: #ffffff;
+}
