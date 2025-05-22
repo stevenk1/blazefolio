@@ -37,7 +37,7 @@
         <MudTd>@wallet.Name</MudTd>
         <MudTd>
             <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Rounded="true"/>
-            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" Rounded="true"/>
+            <MudIconButton Icon="@Icons.Material.Filled.DeleteForever" Size="Size.Small" Color="Color.Error" Rounded="true" OnClick="@(() => OpenDeleteWalletDialog(wallet))"/>
         </MudTd>
     </RowTemplate>
     <NoRecordsContent>
@@ -81,7 +81,7 @@
             {
                 _wallets = result.Value.Select(wallet => new WalletDisplay
                 {
-                    Id = wallet.Id.Value.ToString(),
+                    Id = wallet.Id.Value,
                     Name = wallet.Name,
                     Balance = 0.00m,
                 }).ToList();
@@ -110,9 +110,27 @@
         }
     }
 
+    private async Task OpenDeleteWalletDialog(WalletDisplay wallet)
+    {
+        var parameters = new DialogParameters
+        {
+            { "WalletName", wallet.Name },
+            { "WalletId", wallet.Id }
+        };
+        
+        var dialog = await DialogService.ShowAsync<Dialogs.DeleteWallet>($"Delete {wallet.Name}", parameters);
+        var result = await dialog.Result;
+        
+        if (!result.Canceled)
+        {
+            // Reload wallets after deletion
+            await LoadWalletsAsync();
+        }
+    }
+    
     private class WalletDisplay
     {
-        public string Id { get; set; } = string.Empty;
+        public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public decimal Balance { get; set; }
     }
