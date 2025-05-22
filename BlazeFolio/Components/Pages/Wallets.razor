@@ -3,6 +3,7 @@
 @using BlazeFolio.Application.Wallets.Features.Queries
 @using BlazeFolio.Services
 @using System.Linq
+@using BlazeFolio.Components.Wallets
 @inject IMediator Mediator
 @inject ErrorHandler ErrorHandler
 @inject IDialogService DialogService
@@ -28,41 +29,15 @@
     }
 </div>
 
-<MudTable Items="@_wallets" Hover="true" Elevation="0" Loading="@_loading">
-    <HeaderContent >
-        <MudTh>Name</MudTh>
-        <MudTh>Actions</MudTh>
-    </HeaderContent>
-    <RowTemplate Context="wallet">
-        <MudTd>@wallet.Name</MudTd>
-        <MudTd>
-            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Rounded="true"/>
-            <MudIconButton Icon="@Icons.Material.Filled.DeleteForever" Size="Size.Small" Color="Color.Error" Rounded="true" OnClick="@(() => OpenDeleteWalletDialog(wallet))"/>
-        </MudTd>
-    </RowTemplate>
-    <NoRecordsContent>
-        <div class="d-flex flex-column align-center justify-center py-4">
-            <MudIcon Icon="@Icons.Material.Filled.Wallet" Size="Size.Large" Color="Color.Secondary"
-                     Class="mb-3"/>
-            <MudText Class="mb-3">No wallets found. Add your first wallet to get started.</MudText>
-            <MudButton Color="Color.Primary" 
-                      Variant="Variant.Filled" 
-                      StartIcon="@Icons.Material.Filled.Add" 
-                      Size="Size.Medium" 
-                      Rounded="true"
-                      OnClick="OpenAddWalletDialog">
-                Add Wallet
-            </MudButton>
-        </div>
-    </NoRecordsContent>
-</MudTable>
-
-
+<WalletsTable 
+    Wallets="_wallets" 
+    Loading="_loading"
+    OnAddWallet="OpenAddWalletDialog"
+    OnDeleteWallet="OpenDeleteWalletDialog" />
 
 @code {
-    private List<WalletDisplay> _wallets = new();
+    private List<WalletsTable.WalletDisplay> _wallets = new();
     private bool _loading = true;
-
 
     protected override async Task OnInitializedAsync()
     {
@@ -79,7 +54,7 @@
 
             if (result is { IsSuccess: true, Value: not null })
             {
-                _wallets = result.Value.Select(wallet => new WalletDisplay
+                _wallets = result.Value.Select(wallet => new WalletsTable.WalletDisplay
                 {
                     Id = wallet.Id.Value,
                     Name = wallet.Name,
@@ -100,7 +75,7 @@
 
     private async Task OpenAddWalletDialog()
     {
-        var dialog = await DialogService.ShowAsync<Dialogs.AddWallet>("Add New Wallet");
+        var dialog = await DialogService.ShowAsync<AddWallet>("Add New Wallet");
         var result = await dialog.Result;
         
         if (!result.Canceled)
@@ -109,8 +84,8 @@
             await LoadWalletsAsync();
         }
     }
-
-    private async Task OpenDeleteWalletDialog(WalletDisplay wallet)
+    
+    private async Task OpenDeleteWalletDialog(WalletsTable.WalletDisplay wallet)
     {
         var parameters = new DialogParameters
         {
@@ -118,7 +93,7 @@
             { "WalletId", wallet.Id }
         };
         
-        var dialog = await DialogService.ShowAsync<Dialogs.DeleteWallet>($"Delete {wallet.Name}", parameters);
+        var dialog = await DialogService.ShowAsync<DeleteWallet>($"Delete {wallet.Name}", parameters);
         var result = await dialog.Result;
         
         if (!result.Canceled)
@@ -127,12 +102,4 @@
             await LoadWalletsAsync();
         }
     }
-    
-    private class WalletDisplay
-    {
-        public Guid Id { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public decimal Balance { get; set; }
-    }
-
 }

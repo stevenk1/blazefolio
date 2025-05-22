@@ -1,0 +1,63 @@
+@using MediatR
+@using BlazeFolio.Application.Wallets.Features.Commands
+@using BlazeFolio.Services
+
+@inject IMediator Mediator
+@inject ErrorHandler ErrorHandler
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudContainer Style="max-width: 500px">
+            <div class="d-flex flex-column align-center mb-4">
+                <MudText Typo="Typo.body1" Align="Align.Center">
+                    You are about to delete wallet <strong>"@WalletName"</strong>. 
+                    This action cannot be undone.
+                </MudText>
+            </div>
+        </MudContainer>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" OnClick="Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" 
+                  Color="Color.Error" 
+                  StartIcon="@Icons.Material.Filled.DeleteForever"
+                  OnClick="DeleteWalletAsync">
+            Delete
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+    
+    [Parameter] public string WalletName { get; set; } = string.Empty;
+    [Parameter] public Guid WalletId { get; set; }
+
+    private async Task DeleteWalletAsync()
+    {
+        try
+        {
+           
+            var command = new DeleteWalletCommand(Domain.WalletAggregate.ValueObjects.WalletId.Create(WalletId));
+            var result = await Mediator.Send(command);
+
+            if (result.IsSuccess)
+            {
+                Snackbar.Add($"Wallet '{WalletName}' was deleted successfully", Severity.Success);
+                MudDialog.Close(DialogResult.Ok(true));
+            }
+            else
+            {
+                Snackbar.Add($"Failed to delete wallet: {result.Error}", Severity.Error);
+            }
+           
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleException(ex, "Error deleting wallet", "DeleteWallet.DeleteWalletAsync");
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}
