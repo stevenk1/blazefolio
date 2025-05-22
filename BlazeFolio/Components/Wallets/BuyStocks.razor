@@ -1,0 +1,90 @@
+@using MediatR
+@using BlazeFolio.Services
+@inject IMediator Mediator
+@inject ErrorHandler ErrorHandler
+@inject MudBlazor.ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="form" @bind-IsValid="@isValid">
+            <MudTextField T="string" 
+                          Label="Symbol" 
+                          @bind-Value="symbol" 
+                          Required="true" 
+                          RequiredError="Symbol is required"
+                          Class="mb-3" />
+                          
+            <MudDatePicker Label="Purchase Date" 
+                          @bind-Date="purchaseDate" 
+                          Required="true"
+                          RequiredError="Date is required"
+                          Class="mb-3" />
+                          
+            <MudNumericField T="decimal" 
+                            Label="Price" 
+                            @bind-Value="price" 
+                            Required="true"
+                            RequiredError="Price is required"
+                            Min="0.01M"
+                            Format="N2"
+                            AdornmentIcon="@Icons.Material.Filled.AttachMoney"
+                            Adornment="Adornment.Start"
+                            Class="mb-3" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" 
+                  Disabled="@(!isValid)" 
+                  OnClick="SubmitPurchase">
+            Save
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+    
+    [Parameter] public Guid WalletId { get; set; }
+    [Parameter] public string WalletName { get; set; } = string.Empty;
+    
+    private MudForm form = default!;
+    private bool isValid;
+    private string symbol = string.Empty;
+    private DateTime? purchaseDate = DateTime.Today;
+    private decimal price;
+    
+    protected override void OnInitialized()
+    {
+        // Ensure purchase date is set to today
+        purchaseDate = DateTime.Today;
+    }
+    
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+    
+    private async Task SubmitPurchase()
+    {
+        if (!isValid || !purchaseDate.HasValue)
+            return;
+            
+        try
+        {
+            // Here you would add the actual command to save the stock purchase
+            // For example: await Mediator.Send(new RecordStockPurchase(WalletId, symbol, purchaseDate.Value, price));
+            
+            // For now, just close the dialog with success
+            Snackbar.Add($"Recorded purchase of {symbol} at ${price:N2}", Severity.Success);
+            MudDialog.Close(DialogResult.Ok(new StockPurchase(symbol, purchaseDate.Value, price)));
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleException(ex, "Error recording stock purchase", "BuyStocks.SubmitPurchase");
+            Snackbar.Add("Failed to record stock purchase", Severity.Error);
+        }
+    }
+    
+    public record StockPurchase(string Symbol, DateTime PurchaseDate, decimal Price);
+}

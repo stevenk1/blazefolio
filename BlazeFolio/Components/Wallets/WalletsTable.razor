@@ -11,6 +11,12 @@
     <RowTemplate Context="wallet">
         <MudTd>@wallet.Name</MudTd>
         <MudTd>
+            <MudIconButton Icon="@Icons.Material.Filled.ShoppingCart" 
+                          Size="Size.Small" 
+                          Color="Color.Success" 
+                          Rounded="true" 
+                          OnClick="@(() => OnBuyStocks.InvokeAsync(wallet))"
+                          Title="Buy Stocks"/>
             <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Rounded="true"/>
             <MudIconButton Icon="@Icons.Material.Filled.DeleteForever" Size="Size.Small" Color="Color.Error" Rounded="true" OnClick="@(() => OnDeleteWallet.InvokeAsync(wallet))"/>
         </MudTd>
@@ -44,6 +50,9 @@
     
     [Parameter]
     public EventCallback<WalletDisplay> OnDeleteWallet { get; set; }
+    
+    [Parameter]
+    public EventCallback<WalletDisplay> OnBuyStocks { get; set; }
     
     public class WalletDisplay
     {
