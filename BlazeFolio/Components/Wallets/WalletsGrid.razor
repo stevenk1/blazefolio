@@ -1,0 +1,83 @@
+@using MediatR
+@using BlazeFolio.Application.Wallets.Features.Queries
+@using BlazeFolio.Services
+@using System.Linq
+
+<MudContainer>
+    @if (Loading)
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+    }
+    else if (!Wallets.Any())
+    {
+        <MudPaper Class="d-flex flex-column align-center justify-center pa-4" Elevation="0">
+            <MudText Typo="Typo.h6">No wallets found</MudText>
+            <MudText Typo="Typo.body2" Class="mb-4">Create your first wallet to get started</MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => OnAddWallet.InvokeAsync())">Create Wallet</MudButton>
+        </MudPaper>
+    }
+    else
+    {
+        <MudGrid>
+            @foreach (var wallet in Wallets)
+            {
+                <MudItem xs="12" sm="6" md="4" lg="3">
+                    <MudCard Outlined="true" Elevation="2">
+                        <MudCardContent>
+                            <MudText Typo="Typo.h6" Class="font-weight-bold">@wallet.Name</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                Created: @DateTime.Now.ToString("MMM dd, yyyy") &bull; 0 asset(s)
+                            </MudText>
+
+                            <MudDivider Class="my-2" />
+
+                            <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Balance</MudText>
+                            <MudText Typo="Typo.h6" Class="mb-2">@wallet.Balance.ToString("C2")</MudText>
+
+                            <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Market Value</MudText>
+                            <MudText Typo="Typo.h6" Class="mb-2">$0.00</MudText>
+
+                            <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Profit/Loss</MudText>
+                            <MudText Typo="Typo.h6" Color="Color.Success">
+                                <MudIcon Icon="@Icons.Material.Filled.ShowChart" Class="mr-1" />
+                                $0.00 (0.00%)
+                            </MudText>
+                            <MudButton  Variant="Variant.Outlined" Color="Color.Secondary" FullWidth=true 
+                                       EndIcon="@Icons.Material.Filled.ArrowForward" >
+                                View Details
+                            </MudButton>
+                            @* OnClick="@(() => OnViewDetails(wallet))"> *@
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            }
+        </MudGrid>
+    }
+</MudContainer>
+
+@code {
+    [Parameter]
+    public List<WalletDisplay> Wallets { get; set; } = new();
+    
+    [Parameter]
+    public bool Loading { get; set; }
+    
+    [Parameter]
+    public EventCallback OnAddWallet { get; set; }
+    
+    [Parameter]
+    public EventCallback<WalletDisplay> OnDeleteWallet { get; set; }
+    
+    [Parameter]
+    public EventCallback<WalletDisplay> OnBuyStocks { get; set; }
+    
+    [Parameter]
+    public EventCallback<WalletDisplay> OnViewDetails { get; set; }
+    
+    public class WalletDisplay
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public decimal Balance { get; set; }
+    }
+}

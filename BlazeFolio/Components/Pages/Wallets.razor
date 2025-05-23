@@ -8,6 +8,7 @@
 @inject ErrorHandler ErrorHandler
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
+@inject NavigationManager NavigationManager
 
 <PageTitle>Wallets</PageTitle>
 
@@ -30,15 +31,16 @@
     }
 </div>
 
-<WalletsTable 
+<WalletsGrid 
     Wallets="_wallets" 
     Loading="_loading"
     OnAddWallet="OpenAddWalletDialog"
     OnDeleteWallet="OpenDeleteWalletDialog"
-    OnBuyStocks="OpenBuyStocksDialog" />
+    OnBuyStocks="OpenBuyStocksDialog"
+    OnViewDetails="ViewWalletDetails" />
 
 @code {
-    private List<WalletsTable.WalletDisplay> _wallets = new();
+    private List<WalletsGrid.WalletDisplay> _wallets = new();
     private bool _loading = true;
 
     protected override async Task OnInitializedAsync()
@@ -56,7 +58,7 @@
 
             if (result is { IsSuccess: true, Value: not null })
             {
-                _wallets = result.Value.Select(wallet => new WalletsTable.WalletDisplay
+                _wallets = result.Value.Select(wallet => new WalletsGrid.WalletDisplay
                 {
                     Id = wallet.Id.Value,
                     Name = wallet.Name,
@@ -79,7 +81,7 @@
     {
         var options = new DialogOptions { CloseOnEscapeKey = true , CloseButton = true};
 
-        var dialog = await DialogService.ShowAsync<AddWallet>("Add a new Wallet");
+        var dialog = await DialogService.ShowAsync<AddWallet>("Add a new Wallet",options);
         var result = await dialog.Result;
         
         if (!result.Canceled)
@@ -89,7 +91,7 @@
         }
     }
     
-    private async Task OpenDeleteWalletDialog(WalletsTable.WalletDisplay wallet)
+    private async Task OpenDeleteWalletDialog(WalletsGrid.WalletDisplay wallet)
     {
         var parameters = new DialogParameters
         {
@@ -107,7 +109,7 @@
         }
     }
     
-    private async Task OpenBuyStocksDialog(WalletsTable.WalletDisplay wallet)
+    private async Task OpenBuyStocksDialog(WalletsGrid.WalletDisplay wallet)
     {
         var parameters = new DialogParameters
         {
@@ -124,5 +126,10 @@
             // You might want to reload wallet data here if needed
             // await LoadWalletsAsync();
         }
+    }
+    
+    private void ViewWalletDetails(WalletsGrid.WalletDisplay wallet)
+    {
+        NavigationManager.NavigateTo($"/wallet/{wallet.Id}");
     }
 }
