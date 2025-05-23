@@ -15,3 +15,11 @@
 .mud-dialog {
     background-color: #ffffff;
 }
+
+/* Custom dialog styles */
+.dialog {
+    border-radius: 12px; 
+    width: 400px; 
+    max-width: 90vw;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}

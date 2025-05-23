@@ -2,76 +2,58 @@
 @using BlazeFolio.Services
 @using MediatR
 @using BlazeFolio.Domain.WalletAggregate
+@using BlazeFolio.Components.Shared
 @inject IMediator Mediator
 @inject ErrorHandler ErrorHandler
 @inject ISnackbar Snackbar
 
-<MudDialog>
-    <DialogContent>
-        <MudContainer Style="max-width: 500px;">
-            
-            <MudForm @ref="form" Model="@walletModel" @bind-IsValid="@isValid">
-                <MudTextField T="string" 
-                              @bind-Value="walletModel.Name" 
-                              Label="Wallet Name" 
-                              Required="true" 
-                              RequiredError="Name is required"
-                              Class="mb-3"/>
-                              
-                <MudSelect T="WalletType" 
-                          @bind-Value="walletModel.Type" 
-                          Label="Wallet Type" 
-                          Required="true"
-                          RequiredError="Wallet type is required"
-                          Class="mb-3">
-                    <MudSelectItem Value="WalletType.Crypto" Disabled="true">Crypto (Coming Soon)</MudSelectItem>
-                    <MudSelectItem Value="WalletType.StockExchange">Stock Exchange</MudSelectItem>
-                </MudSelect>
-            </MudForm>
-        </MudContainer>
-    </DialogContent>
-    <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" OnClick="Submit" Disabled="@(!isValid)" Variant="Variant.Filled">Add Wallet</MudButton>
-    </DialogActions>
-</MudDialog>
+<SharedDialog @ref="_dialog" Class="add-wallet-dialog">
+    <MudForm Model="@_walletModel" @bind-IsValid="@_isValid">
+        <MudText Typo="Typo.subtitle1" Class="mb-1">Wallet Name</MudText>
+        <MudTextField @bind-Value="_walletModel.Name"
+                      Placeholder="e.g., Tech Stocks, Retirement Fund"
+                      Variant="Variant.Outlined"
+                      Class="mb-4"
+                      FullWidth="true" />
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   FullWidth="true"
+                   OnClick="Submit"
+                   Style="text-transform: none; font-size: 1rem; padding: 12px;">
+            Create Wallet
+        </MudButton>
+    </MudForm>
+  
+</SharedDialog>
 
 @code {
-    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+    private SharedDialog _dialog = null!;
+    private bool _isValid;
+    private bool _processing;
     
-    private MudForm form = null!;
-    private bool isValid;
-    private bool processing;
-    
-    private WalletModel walletModel = new();
+    private readonly WalletModel _walletModel = new();
     
     private class WalletModel
     {
         public string Name { get; set; } = string.Empty;
-        public string Symbol { get; set; } = "BTC";
-        public WalletType Type { get; set; } = WalletType.StockExchange;
     }
     
-    private void Cancel()
-    {
-        MudDialog.Cancel();
-    }
+   
     
     private async Task Submit()
     {
-        if (!isValid || processing) 
+        if (!_isValid || _processing) 
             return;
         
-        processing = true;
+        _processing = true;
         
         try
         {
             var command = new AddWalletCommand
             {
-                Name = walletModel.Name,
-                Type = walletModel.Type
-                // Note: Adjust the actual command properties based on what AddWalletCommand accepts
-                // The command might need adjustments if it has different properties
+                Name = _walletModel.Name,
+                Type = WalletType.StockExchange
             };
             
             var result = await Mediator.Send(command);
@@ -79,7 +61,7 @@
             if (result.IsSuccess)
             {
                 Snackbar.Add("Wallet added successfully", MudBlazor.Severity.Success);
-                MudDialog.Close(DialogResult.Ok(result.Value));
+                _dialog.Close(result.Value);
             }
             else
             {
@@ -89,11 +71,10 @@
         catch (Exception ex)
         {
             ErrorHandler.HandleException(ex, "Error adding wallet", "AddWallet.Submit");
-            Snackbar.Add("Failed to add wallet", MudBlazor.Severity.Error);
         }
         finally
         {
-            processing = false;
+            _processing = false;
         }
     }
 }

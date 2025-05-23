@@ -1,0 +1,56 @@
+@using MudBlazor
+
+<MudDialog Class="dialog" Style="@Style">
+    <DialogContent>
+        <MudContainer Style="@ContentStyle">
+            @ChildContent
+        </MudContainer>
+    </DialogContent>
+    <DialogActions>
+        @ActionContent
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+    
+    /// <summary>
+    /// The content to be displayed in the dialog body
+    /// </summary>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    
+    /// <summary>
+    /// The content to be displayed in the dialog actions area (buttons)
+    /// </summary>
+    [Parameter] public RenderFragment? ActionContent { get; set; }
+    
+    /// <summary>
+    /// Additional CSS class for the dialog
+    /// </summary>
+    [Parameter] public string Class { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// CSS style for the dialog
+    /// </summary>
+    [Parameter] public string Style { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// CSS style for the dialog content container
+    /// </summary>
+    [Parameter] public string ContentStyle { get; set; } = "max-width: 500px;";
+    
+    /// <summary>
+    /// Closes the dialog with Cancel result
+    /// </summary>
+    public void Cancel() => MudDialog.Cancel();
+    
+    /// <summary>
+    /// Closes the dialog with the specified result
+    /// </summary>
+    public void Close(DialogResult result) => MudDialog.Close(result);
+    
+    /// <summary>
+    /// Closes the dialog with success result
+    /// </summary>
+    public void Close<T>(T returnValue) => MudDialog.Close(DialogResult.Ok(returnValue));
+}
