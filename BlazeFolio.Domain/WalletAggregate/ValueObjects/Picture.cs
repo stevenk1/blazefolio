@@ -24,18 +24,15 @@ public sealed class Picture : ValueObject
 
     public static Picture Empty()
     {
-        return new Picture(Array.Empty<byte>());
+        return new Picture([]);
     }
 
     public override IEnumerable<object> GetEqualityComponents()
     {
-        if (Value != null)
+        // For byte array equality, we need to compare each byte
+        foreach (var b in Value)
         {
-            // For byte array equality, we need to compare each byte
-            foreach (var b in Value)
-            {
-                yield return b;
-            }
+            yield return b;
         }
     }
 }

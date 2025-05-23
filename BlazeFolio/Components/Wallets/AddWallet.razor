@@ -1,6 +1,7 @@
 @using BlazeFolio.Application.Wallets.Features.Commands
 @using BlazeFolio.Services
 @using MediatR
+@using BlazeFolio.Domain.WalletAggregate
 @inject IMediator Mediator
 @inject ErrorHandler ErrorHandler
 @inject ISnackbar Snackbar
@@ -16,6 +17,16 @@
                               Required="true" 
                               RequiredError="Name is required"
                               Class="mb-3"/>
+                              
+                <MudSelect T="WalletType" 
+                          @bind-Value="walletModel.Type" 
+                          Label="Wallet Type" 
+                          Required="true"
+                          RequiredError="Wallet type is required"
+                          Class="mb-3">
+                    <MudSelectItem Value="WalletType.Crypto" Disabled="true">Crypto (Coming Soon)</MudSelectItem>
+                    <MudSelectItem Value="WalletType.StockExchange">Stock Exchange</MudSelectItem>
+                </MudSelect>
             </MudForm>
         </MudContainer>
     </DialogContent>
@@ -38,6 +49,7 @@
     {
         public string Name { get; set; } = string.Empty;
         public string Symbol { get; set; } = "BTC";
+        public WalletType Type { get; set; } = WalletType.StockExchange;
     }
     
     private void Cancel()
@@ -57,6 +69,7 @@
             var command = new AddWalletCommand
             {
                 Name = walletModel.Name,
+                Type = walletModel.Type
                 // Note: Adjust the actual command properties based on what AddWalletCommand accepts
                 // The command might need adjustments if it has different properties
             };

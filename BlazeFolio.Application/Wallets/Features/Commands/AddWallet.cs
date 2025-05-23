@@ -9,6 +9,7 @@ public partial class AddWalletCommand : IRequest<Result<Guid>>
 {
     public string Name { get; set; }
     public byte[] Picture { get; set; }
+    public WalletType Type { get; set; }
 }
 
 public class AddWalletCommandHandler : IRequestHandler<AddWalletCommand, Result<Guid>>
@@ -22,7 +23,7 @@ public class AddWalletCommandHandler : IRequestHandler<AddWalletCommand, Result<
 
     public async Task<Result<Guid>> Handle(AddWalletCommand request, CancellationToken cancellationToken)
     {
-        var wallet = Wallet.CreateNew(request.Name, request.Picture);
+        var wallet = Wallet.CreateNew(request.Name, request.Picture, request.Type);
 
         await _walletRepository.AddAsync(wallet);
 

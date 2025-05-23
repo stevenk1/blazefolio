@@ -1,5 +1,6 @@
 using BlazeFolio.Application.Tests.Testing;
 using BlazeFolio.Application.Wallets.Features.Commands;
+using BlazeFolio.Domain.WalletAggregate;
 using FluentAssertions;
 using System;
 using System.Threading;
@@ -24,7 +25,8 @@ public class AddWalletCommandHandlerTests : IClassFixture<DatabaseFixture>
         var command = new AddWalletCommand
         {
             Name = "Test Wallet",
-            Picture = [1, 2, 3, 4]
+            Picture = [1, 2, 3, 4],
+            Type = WalletType.Crypto
         };
         
         // Act
@@ -41,5 +43,6 @@ public class AddWalletCommandHandlerTests : IClassFixture<DatabaseFixture>
         savedWallet.Should().NotBeNull();
         savedWallet!.Name.Should().Be(command.Name);
         savedWallet.Picture.Value.Should().BeEquivalentTo(command.Picture);
+        savedWallet.Type.Should().Be(command.Type);
     }
 }

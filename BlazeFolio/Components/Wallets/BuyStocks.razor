@@ -1,5 +1,7 @@
 @using MediatR
 @using BlazeFolio.Services
+@using BlazeFolio.Application.Wallets.Features.Commands
+@using BlazeFolio.Domain.WalletAggregate.ValueObjects
 @inject IMediator Mediator
 @inject ErrorHandler ErrorHandler
 @inject MudBlazor.ISnackbar Snackbar
@@ -30,6 +32,14 @@
                             AdornmentIcon="@Icons.Material.Filled.AttachMoney"
                             Adornment="Adornment.Start"
                             Class="mb-3" />
+                            
+            <MudNumericField T="int" 
+                            Label="Quantity" 
+                            @bind-Value="quantity" 
+                            Required="true"
+                            RequiredError="Quantity is required"
+                            Min="1"
+                            Class="mb-3" />
         </MudForm>
     </DialogContent>
     <DialogActions>
@@ -53,6 +63,7 @@
     private string symbol = string.Empty;
     private DateTime? purchaseDate = DateTime.Today;
     private decimal price;
+    private int quantity = 1;
     
     protected override void OnInitialized()
     {
@@ -72,12 +83,23 @@
             
         try
         {
-            // Here you would add the actual command to save the stock purchase
-            // For example: await Mediator.Send(new RecordStockPurchase(WalletId, symbol, purchaseDate.Value, price));
-            
-            // For now, just close the dialog with success
-            Snackbar.Add($"Recorded purchase of {symbol} at ${price:N2}", Severity.Success);
-            MudDialog.Close(DialogResult.Ok(new StockPurchase(symbol, purchaseDate.Value, price)));
+            var walletId = BlazeFolio.Domain.WalletAggregate.ValueObjects.WalletId.Create(WalletId);
+            var result = await Mediator.Send(new BlazeFolio.Application.Wallets.Features.Commands.RecordStockPurchase(
+                walletId, 
+                symbol, 
+                purchaseDate.Value, 
+                price,
+                quantity));
+                
+            if (result.IsSuccess)
+            {
+                Snackbar.Add($"Recorded purchase of {quantity} {symbol} at ${price:N2}", Severity.Success);
+                MudDialog.Close(DialogResult.Ok(new StockPurchase(symbol, purchaseDate.Value, price, quantity)));
+            }
+            else
+            {
+                Snackbar.Add($"Failed to record purchase: {result.Error}", Severity.Error);
+            }
         }
         catch (Exception ex)
         {
@@ -86,5 +108,5 @@
         }
     }
     
-    public record StockPurchase(string Symbol, DateTime PurchaseDate, decimal Price);
+    public record StockPurchase(string Symbol, DateTime PurchaseDate, decimal Price, int Quantity);
 }
