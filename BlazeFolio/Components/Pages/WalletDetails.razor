@@ -198,7 +198,7 @@ else
         };
 
         var options = new DialogOptions { CloseOnEscapeKey = true, CloseButton = true };
-        var dialog = await DialogService.ShowAsync<AddAsset>($"Add asset - {wallet.Name}", parameters, options);
+        var dialog = await DialogService.ShowAsync<AddAsset>($"Add asset to {wallet.Name}", parameters, options);
         var result = await dialog.Result;
 
         if (!result.Canceled && result.Data is AddAsset.StockPurchase purchase)

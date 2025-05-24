@@ -5,48 +5,64 @@
 @inject ErrorHandler ErrorHandler
 @inject ISnackbar Snackbar
 
-<SharedDialog @ref="_dialog">
+<SharedDialog @ref="_dialog" Class="add-asset-dialog">
     <ChildContent>
         <MudForm @ref="_form" @bind-IsValid="@_isValid">
+            <MudText Typo="Typo.subtitle1" Class="mb-1">Symbol</MudText>
             <MudTextField T="string" 
-                          Label="Symbol" 
                           @bind-Value="Symbol" 
                           Required="true" 
                           RequiredError="Symbol is required"
-                          Class="mb-3" />
+                          Placeholder="e.g., AAPL, MSFT, TSLA"
+                          Variant="Variant.Outlined"
+                          FullWidth
+                          Class="mb-4" />
                           
-            <MudDatePicker Label="Purchase Date" 
-                          @bind-Date="_purchaseDate" 
+                                      <MudText Typo="Typo.subtitle1" Class="mb-1">Purchase Date</MudText>
+                                      <MudDatePicker @bind-Date="_purchaseDate"
                           Required="true"
                           RequiredError="Date is required"
-                          Class="mb-3" />
-                          
-            <MudNumericField T="decimal" 
-                            Label="Price" 
-                            @bind-Value="_price" 
-                            Required="true"
-                            RequiredError="Price is required"
-                            Min="0.01M"
-                            Format="N2"
-                            AdornmentIcon="@Icons.Material.Filled.AttachMoney"
-                            Adornment="Adornment.Start"
-                            Class="mb-3" />
-                            
-            <MudNumericField T="int" 
-                            Label="Quantity" 
-                            @bind-Value="_quantity" 
-                            Required="true"
-                            RequiredError="Quantity is required"
-                            Min="1"
-                            Class="mb-3" />
+                          Variant="Variant.Outlined"
+                          FullWidth
+                          Class="mb-4" />
+
+                                      <MudGrid>
+                                          <MudItem xs="6">
+                                              <MudText Typo="Typo.subtitle1" Class="mb-1">Price</MudText>
+                                              <MudNumericField T="decimal"
+                                    @bind-Value="_price" 
+                                    Required="true"
+                                    RequiredError="Price is required"
+                                    Min="0.01M"
+                                    Format="N2"
+                                    AdornmentIcon="@Icons.Material.Filled.AttachMoney"
+                                    Adornment="Adornment.Start"
+                                    Variant="Variant.Outlined"
+                                    FullWidth
+                                    Class="mb-4" />
+                                          </MudItem>
+                                          <MudItem xs="6">
+                                              <MudText Typo="Typo.subtitle1" Class="mb-1">Quantity</MudText>
+                                              <MudNumericField T="int"
+                                    @bind-Value="_quantity" 
+                                    Required="true"
+                                    RequiredError="Quantity is required"
+                                    Min="1"
+                                    Variant="Variant.Outlined"
+                                    FullWidth
+                                    Class="mb-4" />
+                                          </MudItem>
+                                      </MudGrid>
         </MudForm>
     </ChildContent>
     <ActionContent>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" 
-                  Disabled="@(!_isValid)" 
-                  OnClick="SubmitPurchase">
-            Save
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   FullWidth
+                   Disabled="@(!_isValid)"
+                   OnClick="SubmitPurchase"
+                   Style="text-transform: none; font-size: 1rem; padding: 12px;">
+            Add Asset
         </MudButton>
     </ActionContent>
 </SharedDialog>
@@ -58,6 +74,7 @@
     private SharedDialog _dialog = null!;
     private MudForm _form = null!;
     private bool _isValid;
+    private bool _processing;
     public string Symbol = string.Empty;
     private DateTime? _purchaseDate = DateTime.Today;
     private decimal _price;
@@ -76,8 +93,10 @@
 
     private async Task SubmitPurchase()
     {
-        if (!_isValid || !_purchaseDate.HasValue)
+        if (!_isValid || !_purchaseDate.HasValue || _processing)
             return;
+
+        _processing = true;
 
         try
         {
@@ -103,6 +122,10 @@
         {
             ErrorHandler.HandleException(ex, "Error recording asset purchase", "AddAsset.SubmitPurchase");
             Snackbar.Add("Failed to record asset purchase", Severity.Error);
+        }
+        finally
+        {
+            _processing = false;
         }
     }
     
