@@ -67,50 +67,48 @@ else
                     }
                     else
                     {
-                        <MudGrid>
+                        <MudExpansionPanels MultiExpansion="true" Class="mt-3">
                             @foreach (var group in _wallet.Assets.GroupBy(a => a.Symbol))
                             {
                                 var totalShares = group.Sum(a => a.Shares);
                                 var totalValue = group.Sum(a => a.Price * a.Shares);
 
-                                <MudItem xs="12" sm="12" md="12">
-                                    <MudCard Elevation="0" Outlined="true" Class="mb-4">
-                                        <MudCardHeader>
-                                            <CardHeaderContent>
-                                                <div class="d-flex justify-space-between align-center">
-                                                    <MudText Typo="Typo.h5">@group.Key</MudText>
-                                                    <MudText Typo="Typo.h6">@totalValue.ToString("C2")</MudText>
-                                                </div>
-                                                <MudText Typo="Typo.subtitle2">Total Shares: @totalShares</MudText>
-                                            </CardHeaderContent>
-                                        </MudCardHeader>
-                                        <MudCardContent>
-                                            <MudTable Items="@group" Dense="true" Hover="true"
-                                                      Breakpoint="Breakpoint.Sm">
-                                                <HeaderContent>
-                                                    <MudTh>Date</MudTh>
-                                                    <MudTh>Shares</MudTh>
-                                                    <MudTh>Price</MudTh>
-                                                    <MudTh>Value</MudTh>
-                                                    <MudTh></MudTh>
-                                                </HeaderContent>
-                                                <RowTemplate Context="asset">
-                                                    <MudTd>@asset.PurchaseDate.ToString("MM/dd/yyyy")</MudTd>
-                                                    <MudTd>@asset.Shares</MudTd>
-                                                    <MudTd>@asset.Price.ToString("C2")</MudTd>
-                                                    <MudTd>@((asset.Price * asset.Shares).ToString("C2"))</MudTd>
-                                                    <MudTd>
-                                                        <MudIconButton Icon="@Icons.Material.Filled.Sell"
-                                                                       Size="Size.Small"
-                                                                       OnClick="@(() => OpenSellAssetDialog(asset))"/>
-                                                    </MudTd>
-                                                </RowTemplate>
-                                            </MudTable>
-                                        </MudCardContent>
-                                    </MudCard>
-                                </MudItem>
+                                <MudExpansionPanel>
+                                    <TitleContent>
+                                        <div class="d-flex justify-space-between align-center" style="width: 100%">
+                                            <div>
+                                                <MudText Typo="Typo.h6">@group.Key</MudText>
+                                                <MudText Typo="Typo.body2">Total Shares: @totalShares</MudText>
+                                            </div>
+                                            <MudText Typo="Typo.h6" Class="mud-primary-text">@totalValue.ToString("C2")</MudText>
+                                        </div>
+                                    </TitleContent>
+                                    <ChildContent>
+                                        <MudTable Items="@group" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" 
+                                                  Class="mt-2">
+                                            <HeaderContent>
+                                                <MudTh>Date</MudTh>
+                                                <MudTh>Shares</MudTh>
+                                                <MudTh>Price</MudTh>
+                                                <MudTh>Value</MudTh>
+                                                <MudTh></MudTh>
+                                            </HeaderContent>
+                                            <RowTemplate Context="asset">
+                                                <MudTd>@asset.PurchaseDate.ToString("MM/dd/yyyy")</MudTd>
+                                                <MudTd>@asset.Shares</MudTd>
+                                                <MudTd>@asset.Price.ToString("C2")</MudTd>
+                                                <MudTd>@((asset.Price * asset.Shares).ToString("C2"))</MudTd>
+                                                <MudTd>
+                                                    <MudIconButton Icon="@Icons.Material.Filled.Sell"
+                                                                   Size="Size.Small"
+                                                                   OnClick="@(() => OpenSellAssetDialog(asset))"/>
+                                                </MudTd>
+                                            </RowTemplate>
+                                        </MudTable>
+                                    </ChildContent>
+                                </MudExpansionPanel>
                             }
-                        </MudGrid>
+                        </MudExpansionPanels>
                     }
 
 
