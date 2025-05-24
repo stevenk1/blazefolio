@@ -1,5 +1,6 @@
 using BlazeFolio.Application.Contracts.Persistence.Repositories;
 using BlazeFolio.Domain.WalletAggregate;
+using BlazeFolio.Domain.WalletAggregate.Entities;
 using BlazeFolio.Domain.WalletAggregate.ValueObjects;
 using CSharpFunctionalExtensions;
 using MediatR;
@@ -31,8 +32,8 @@ public class RecordStockPurchaseHandler : IRequestHandler<RecordStockPurchase, R
             return Result.Failure($"Wallet with id: {request.WalletId} not found.");
         }
 
-        var stockPurchase = StockPurchase.Create(request.Symbol, request.PurchaseDate, request.Quantity, request.Price);
-        wallet.AddStockPurchase(stockPurchase);
+        var asset = Asset.Create(request.Symbol, request.PurchaseDate, request.Quantity, request.Price);
+        wallet.AddAsset(asset);
 
         await _walletRepository.UpdateAsync(wallet);
 

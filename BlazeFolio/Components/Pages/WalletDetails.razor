@@ -201,9 +201,9 @@ else
         var dialog = await DialogService.ShowAsync<AddAsset>($"Add asset to {wallet.Name}", parameters, options);
         var result = await dialog.Result;
 
-        if (!result.Canceled && result.Data is AddAsset.StockPurchase purchase)
+        if (!result.Canceled && result.Data is AddAsset.Asset asset)
         {
-            Snackbar.Add($"Added {purchase.Symbol} purchase to {wallet.Name}", Severity.Success);
+            Snackbar.Add($"Added {asset.Symbol} purchase to {wallet.Name}", Severity.Success);
             await LoadWalletAsync();
         }
     }

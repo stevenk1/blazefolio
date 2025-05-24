@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using BlazeFolio.Domain.WalletAggregate;
-using BlazeFolio.Domain.WalletAggregate.ValueObjects;
 using LiteDB;
 
 namespace BlazeFolio.Infrastructure.Persistence.Models;
@@ -16,7 +12,7 @@ public class WalletModel
     public string Name { get; set; } = string.Empty;
     public byte[] Picture{ get; set; } = [];
     public WalletType Type { get; set; } = WalletType.StockExchange;
-    public List<StockPurchaseModel> Purchases { get; set; } = new();
+    public List<AssetModel> Assets { get; set; } = new();
 
     // Parameterless constructor required by LiteDB
     public WalletModel()
@@ -32,7 +28,7 @@ public class WalletModel
             Name = wallet.Name,
             Picture = wallet.Picture.Value,
             Type = wallet.Type,
-            Purchases = wallet.StockPurchases.Select(StockPurchaseModel.FromDomain).ToList()
+            Assets = wallet.Assets.Select(AssetModel.FromDomain).ToList()
         };
     }
 
@@ -46,9 +42,9 @@ public class WalletModel
             Type
         );
         
-        foreach (var purchase in Purchases)
+        foreach (var asset in Assets)
         {
-            wallet.AddStockPurchase(purchase.ToDomain());
+            wallet.AddAsset(asset.ToDomain());
         }
         
         return wallet;

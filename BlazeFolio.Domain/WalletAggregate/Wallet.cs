@@ -1,4 +1,5 @@
 using BlazeFolio.Domain.Common;
+using BlazeFolio.Domain.WalletAggregate.Entities;
 using BlazeFolio.Domain.WalletAggregate.ValueObjects;
 
 namespace BlazeFolio.Domain.WalletAggregate;
@@ -8,8 +9,8 @@ public class Wallet(WalletId id, string name, Picture picture, WalletType type =
     public string Name { get; private set; } = name;
     public Picture Picture { get; private set; } = picture;
     public WalletType Type { get; private set; } = type;
-    private readonly List<StockPurchase> _stockPurchases = new();
-    public IReadOnlyList<StockPurchase> StockPurchases => _stockPurchases.AsReadOnly();
+    private readonly List<Asset> _assets = new();
+    public IReadOnlyList<Asset> Assets => _assets.AsReadOnly();
 
     public static Wallet CreateNew(string name, byte[] pictureData, WalletType type = WalletType.StockExchange)
     {
@@ -21,8 +22,8 @@ public class Wallet(WalletId id, string name, Picture picture, WalletType type =
         return wallet;
     }
     
-    public void AddStockPurchase(StockPurchase stockPurchase)
+    public void AddAsset(Asset asset)
     {
-        _stockPurchases.Add(stockPurchase);
+        _assets.Add(asset);
     }
 }

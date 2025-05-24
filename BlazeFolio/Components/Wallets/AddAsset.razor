@@ -111,7 +111,7 @@
             if (result.IsSuccess)
             {
                 Snackbar.Add($"Recorded purchase of {_quantity} {Symbol} at ${_price:N2}", Severity.Success);
-                _dialog.Close(new StockPurchase(Symbol, _purchaseDate.Value, _price, _quantity));
+                _dialog.Close(new Asset(Symbol, _purchaseDate.Value, _price, _quantity));
             }
             else
             {
@@ -129,5 +129,5 @@
         }
     }
     
-    public record StockPurchase(string Symbol, DateTime PurchaseDate, decimal Price, int Quantity);
+    public record Asset(string Symbol, DateTime PurchaseDate, decimal Price, int Quantity);
 }

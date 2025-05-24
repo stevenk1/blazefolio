@@ -26,4 +26,9 @@
     <ItemGroup>
       <Content Remove="Components\Pages\Dashboard.razor" />
     </ItemGroup>
+
+
+    <ItemGroup>
+      <Folder Include="Data\" />
+    </ItemGroup>
 </Project>

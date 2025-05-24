@@ -1,11 +1,10 @@
 using System;
-using BlazeFolio.Domain.WalletAggregate;
-using BlazeFolio.Domain.WalletAggregate.ValueObjects;
+using BlazeFolio.Domain.WalletAggregate.Entities;
 using LiteDB;
 
 namespace BlazeFolio.Infrastructure.Persistence.Models;
 
-public class StockPurchaseModel
+public class AssetModel
 {
     [BsonId]
     public Guid Id { get; set; }
@@ -15,27 +14,27 @@ public class StockPurchaseModel
     public DateTime PurchaseDate { get; set; }
     
     // Parameterless constructor required by LiteDB
-    public StockPurchaseModel()
+    public AssetModel()
     {
     }
     
     // Create from domain entity
-    public static StockPurchaseModel FromDomain(StockPurchase stockPurchase)
+    public static AssetModel FromDomain(Asset asset)
     {
-        return new StockPurchaseModel
+        return new AssetModel
         {
-            Id = stockPurchase.Id.Value,
-            Symbol = stockPurchase.Symbol,
-            Quantity = stockPurchase.Quantity,
-            Price = stockPurchase.Price,
-            PurchaseDate = stockPurchase.PurchaseDate
+            Id = asset.Id.Value,
+            Symbol = asset.Symbol,
+            Quantity = asset.Quantity,
+            Price = asset.Price,
+            PurchaseDate = asset.PurchaseDate
         };
     }
     
     // Convert to domain entity
-    public StockPurchase ToDomain()
+    public Asset ToDomain()
     {
-        return  StockPurchase.Create(
+        return Asset.Create(
             Symbol,
             PurchaseDate,
             Quantity,

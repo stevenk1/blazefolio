@@ -40,7 +40,7 @@ public class RecordStockPurchaseHandlerTests : IClassFixture<DatabaseFixture>
         // Verify stock was added
         var updatedWallet = await _fixture.WalletRepository.GetByIdAsync(addedWallet.Id);
         updatedWallet.Should().NotBeNull();
-        updatedWallet!.StockPurchases.Should().ContainSingle(s => 
+        updatedWallet!.Assets.Should().ContainSingle(s => 
             s.Symbol == command.Symbol && 
             s.PurchaseDate.Date == command.PurchaseDate.Date &&
             s.Price == command.Price && s.Quantity == command.Quantity

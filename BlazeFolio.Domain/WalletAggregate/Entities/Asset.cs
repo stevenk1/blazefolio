@@ -1,16 +1,15 @@
 using BlazeFolio.Domain.Common;
-using BlazeFolio.Domain.WalletAggregate.ValueObjects;
 
-namespace BlazeFolio.Domain.WalletAggregate;
+namespace BlazeFolio.Domain.WalletAggregate.Entities;
 
-public class StockPurchase : Entity<StockPurchaseId>
+public class Asset : Entity<AssetId>
 {
     public string Symbol { get; private set; }
     public DateTime PurchaseDate { get; private set; }
     public int Quantity { get; private set; }
     public decimal Price { get; private set; }
 
-    private StockPurchase(StockPurchaseId id, string symbol, DateTime purchaseDate, int quantity, decimal price)
+    private Asset(AssetId id, string symbol, DateTime purchaseDate, int quantity, decimal price)
         : base(id)
     {
         Symbol = symbol;
@@ -19,10 +18,10 @@ public class StockPurchase : Entity<StockPurchaseId>
         Price = price;
     }
 
-    public static StockPurchase Create(string symbol, DateTime purchaseDate, int quantity, decimal price)
+    public static Asset Create(string symbol, DateTime purchaseDate, int quantity, decimal price)
     {
-        return new StockPurchase(
-            StockPurchaseId.CreateUnique(),
+        return new Asset(
+            AssetId.CreateUnique(),
             symbol,
             purchaseDate,
             quantity,
