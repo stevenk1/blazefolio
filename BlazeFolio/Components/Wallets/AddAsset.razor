@@ -1,30 +1,29 @@
 @using MediatR
 @using BlazeFolio.Services
-@using BlazeFolio.Application.Wallets.Features.Commands
-@using BlazeFolio.Domain.WalletAggregate.ValueObjects
+@using BlazeFolio.Components.Shared
 @inject IMediator Mediator
 @inject ErrorHandler ErrorHandler
-@inject MudBlazor.ISnackbar Snackbar
+@inject ISnackbar Snackbar
 
-<MudDialog>
-    <DialogContent>
-        <MudForm @ref="form" @bind-IsValid="@isValid">
+<SharedDialog @ref="_dialog">
+    <ChildContent>
+        <MudForm @ref="_form" @bind-IsValid="@_isValid">
             <MudTextField T="string" 
                           Label="Symbol" 
-                          @bind-Value="symbol" 
+                          @bind-Value="Symbol" 
                           Required="true" 
                           RequiredError="Symbol is required"
                           Class="mb-3" />
                           
             <MudDatePicker Label="Purchase Date" 
-                          @bind-Date="purchaseDate" 
+                          @bind-Date="_purchaseDate" 
                           Required="true"
                           RequiredError="Date is required"
                           Class="mb-3" />
                           
             <MudNumericField T="decimal" 
                             Label="Price" 
-                            @bind-Value="price" 
+                            @bind-Value="_price" 
                             Required="true"
                             RequiredError="Price is required"
                             Min="0.01M"
@@ -35,66 +34,65 @@
                             
             <MudNumericField T="int" 
                             Label="Quantity" 
-                            @bind-Value="quantity" 
+                            @bind-Value="_quantity" 
                             Required="true"
                             RequiredError="Quantity is required"
                             Min="1"
                             Class="mb-3" />
         </MudForm>
-    </DialogContent>
-    <DialogActions>
+    </ChildContent>
+    <ActionContent>
         <MudButton OnClick="Cancel">Cancel</MudButton>
         <MudButton Color="Color.Primary" 
-                  Disabled="@(!isValid)" 
+                  Disabled="@(!_isValid)" 
                   OnClick="SubmitPurchase">
             Save
         </MudButton>
-    </DialogActions>
-</MudDialog>
+    </ActionContent>
+</SharedDialog>
 
 @code {
-    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
-    
     [Parameter] public Guid WalletId { get; set; }
     [Parameter] public string WalletName { get; set; } = string.Empty;
-    
-    private MudForm form = default!;
-    private bool isValid;
-    private string symbol = string.Empty;
-    private DateTime? purchaseDate = DateTime.Today;
-    private decimal price;
-    private int quantity = 1;
+
+    private SharedDialog _dialog = null!;
+    private MudForm _form = null!;
+    private bool _isValid;
+    public string Symbol = string.Empty;
+    private DateTime? _purchaseDate = DateTime.Today;
+    private decimal _price;
+    private int _quantity = 1;
     
     protected override void OnInitialized()
     {
         // Ensure purchase date is set to today
-        purchaseDate = DateTime.Today;
+        _purchaseDate = DateTime.Today;
     }
     
     private void Cancel()
     {
-        MudDialog.Cancel();
+        _dialog.Cancel();
     }
-    
+
     private async Task SubmitPurchase()
     {
-        if (!isValid || !purchaseDate.HasValue)
+        if (!_isValid || !_purchaseDate.HasValue)
             return;
-            
+
         try
         {
-            var walletId = BlazeFolio.Domain.WalletAggregate.ValueObjects.WalletId.Create(WalletId);
+            var walletId = Domain.WalletAggregate.ValueObjects.WalletId.Create(WalletId);
             var result = await Mediator.Send(new BlazeFolio.Application.Wallets.Features.Commands.RecordStockPurchase(
                 walletId, 
-                symbol, 
-                purchaseDate.Value, 
-                price,
-                quantity));
-                
+                Symbol, 
+                _purchaseDate.Value, 
+                _price,
+                _quantity));
+
             if (result.IsSuccess)
             {
-                Snackbar.Add($"Recorded purchase of {quantity} {symbol} at ${price:N2}", Severity.Success);
-                MudDialog.Close(DialogResult.Ok(new StockPurchase(symbol, purchaseDate.Value, price, quantity)));
+                Snackbar.Add($"Recorded purchase of {_quantity} {Symbol} at ${_price:N2}", Severity.Success);
+                _dialog.Close(new StockPurchase(Symbol, _purchaseDate.Value, _price, _quantity));
             }
             else
             {
@@ -103,8 +101,8 @@
         }
         catch (Exception ex)
         {
-            ErrorHandler.HandleException(ex, "Error recording stock purchase", "BuyStocks.SubmitPurchase");
-            Snackbar.Add("Failed to record stock purchase", Severity.Error);
+            ErrorHandler.HandleException(ex, "Error recording asset purchase", "AddAsset.SubmitPurchase");
+            Snackbar.Add("Failed to record asset purchase", Severity.Error);
         }
     }
     

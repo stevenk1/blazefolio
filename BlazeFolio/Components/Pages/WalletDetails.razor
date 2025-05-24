@@ -1,0 +1,217 @@
+@page "/wallet/{WalletId:guid}"
+@using MediatR
+@using BlazeFolio.Application.Wallets.Features.Queries
+@using BlazeFolio.Services
+@using System.Linq
+@using BlazeFolio.Components.Wallets
+@inject IMediator Mediator
+@inject ErrorHandler ErrorHandler
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject NavigationManager NavigationManager
+
+<PageTitle>Wallet Details</PageTitle>
+
+@if (_loading)
+{
+    <MudContainer Class="d-flex justify-center align-center" Style="height: 400px;">
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+    </MudContainer>
+}
+else if (_wallet == null)
+{
+    <MudAlert Severity="Severity.Error" Class="my-4">Wallet not found.</MudAlert>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary">
+        Return to Wallets
+    </MudButton>
+}
+else
+{
+    <MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+        <MudPaper Elevation="3" Class="pa-4">
+            <MudGrid>
+                <MudItem xs="12" Class="d-flex justify-space-between align-center">
+                    <div>
+                        <MudText Typo="Typo.h4">@_wallet.Name</MudText>
+                        <MudText Typo="Typo.subtitle1" Color="Color.Secondary">Wallet ID: @WalletId</MudText>
+                    </div>
+                    <div>
+                        <MudButton Variant="Variant.Outlined" 
+                                  Color="Color.Primary" 
+                                  StartIcon="@Icons.Material.Filled.ArrowBack" 
+                                 
+                                  Class="mr-2">
+                            Back to Wallets
+                        </MudButton>
+                    </div>
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudCard Elevation="0" Outlined="true" Class="mb-4">
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.h6">Balance Information</MudText>
+                            </CardHeaderContent>
+                        </MudCardHeader>
+                        <MudCardContent>
+                      
+                      
+                      b
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudCard Elevation="0" Outlined="true" Class="mb-4">
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.h6">Performance</MudText>
+                            </CardHeaderContent>
+                        </MudCardHeader>
+                        <MudCardContent>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudCard Elevation="0" Outlined="true">
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.h6">Portfolio Holdings</MudText>
+                            </CardHeaderContent>
+                            <CardHeaderActions>
+                                <MudButton Variant="Variant.Filled" 
+                                          Color="Color.Primary" 
+                                          Size="Size.Small"
+                                          StartIcon="@Icons.Material.Filled.Add"
+                                          OnClick="@(() => OpenBuyStocksDialog(_wallet))">Add Asset</MudButton>
+                            </CardHeaderActions>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            @if (true) // Replace with actual check for portfolio holdings
+                            {
+                                <MudAlert Severity="Severity.Info" Class="my-2">No holdings found in this wallet yet.</MudAlert>
+                            }
+                            else
+                            {
+                                <MudTable Items="@(new[]{1})" Hover="true" Breakpoint="Breakpoint.Sm" Loading="false">
+                                    <HeaderContent>
+                                        <MudTh>Symbol</MudTh>
+                                        <MudTh>Company</MudTh>
+                                        <MudTh>Shares</MudTh>
+                                        <MudTh>Avg. Price</MudTh>
+                                        <MudTh>Current Price</MudTh>
+                                        <MudTh>Market Value</MudTh>
+                                        <MudTh>P/L ($)</MudTh>
+                                        <MudTh>P/L (%)</MudTh>
+                                        <MudTh>Actions</MudTh>
+                                    </HeaderContent>
+                                    <RowTemplate>
+                                        <MudTd>AAPL</MudTd>
+                                        <MudTd>Apple Inc.</MudTd>
+                                        <MudTd>10</MudTd>
+                                        <MudTd>$150.00</MudTd>
+                                        <MudTd>$155.00</MudTd>
+                                        <MudTd>$1,550.00</MudTd>
+                                        <MudTd><span class="mud-text-success">+$50.00</span></MudTd>
+                                        <MudTd><span class="mud-text-success">+3.33%</span></MudTd>
+                                        <MudTd>
+                                            <MudIconButton Icon="@Icons.Material.Filled.Sell" Size="Size.Small" />
+                                        </MudTd>
+                                    </RowTemplate>
+                                </MudTable>
+                            }
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudCard Elevation="0" Outlined="true">
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.h6">Recent Transactions</MudText>
+                            </CardHeaderContent>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            <MudAlert Severity="Severity.Info" Class="my-2">No transactions found for this wallet yet.</MudAlert>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+    </MudContainer>
+}
+
+@code {
+    [Parameter]
+    public Guid WalletId { get; set; }
+
+    private WalletModel? _wallet;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadWalletAsync();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadWalletAsync();
+    }
+
+    private async Task LoadWalletAsync()
+    {
+        _loading = true;
+
+        try
+        {
+            // Here we're temporarily creating a mock wallet for demonstration
+            // In a real implementation, you would fetch the actual wallet data
+            // var result = await Mediator.Send(new GetWalletById(WalletId));
+
+            // Temporary mock implementation
+            await Task.Delay(500); // Simulate network delay
+            _wallet = new WalletModel
+            {
+                Id = WalletId,
+                Name = $"Wallet {WalletId.ToString().Substring(0, 5)}",
+                Balance = 10000.00m
+            };
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleException(ex, "Error loading wallet details", "WalletDetails.LoadWalletAsync");
+            _wallet = null;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task OpenBuyStocksDialog(WalletModel wallet)
+    {
+        var parameters = new DialogParameters
+        {
+            { "WalletName", wallet.Name },
+            { "WalletId", wallet.Id }
+        };
+
+        var options = new DialogOptions { CloseOnEscapeKey = true, CloseButton = true };
+        var dialog = await DialogService.ShowAsync<AddAsset>($"Add asset - {wallet.Name}", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is AddAsset.StockPurchase purchase)
+        {
+            Snackbar.Add($"Added {purchase.Symbol} purchase to {wallet.Name}", Severity.Success);
+            await LoadWalletAsync();
+        }
+    }
+
+    public class WalletModel
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public decimal Balance { get; set; }
+    }
+}

@@ -35,7 +35,7 @@
     Loading="_loading"
     OnAddWallet="OpenAddWalletDialog"
     OnDeleteWallet="OpenDeleteWalletDialog"
-    OnBuyStocks="OpenBuyStocksDialog"
+    OnBuyStocks="OpenAddAssetDialog"
     OnViewDetails="ViewWalletDetails" />
 
 @code {
@@ -108,7 +108,7 @@
         }
     }
     
-    private async Task OpenBuyStocksDialog(WalletsGrid.WalletDisplay wallet)
+    private async Task OpenAddAssetDialog(WalletsGrid.WalletDisplay wallet)
     {
         var parameters = new DialogParameters
         {
@@ -116,10 +116,10 @@
             { "WalletId", wallet.Id }
         };
         
-        var dialog = await DialogService.ShowAsync<BuyStocks>($"Buy Stocks - {wallet.Name}", parameters);
+        var dialog = await DialogService.ShowAsync<AddAsset>($"Add Asset - {wallet.Name}", parameters);
         var result = await dialog.Result;
-        
-        if (!result.Canceled && result.Data is BuyStocks.StockPurchase purchase)
+
+        if (!result.Canceled && result.Data is AddAsset.StockPurchase purchase)
         {
             Snackbar.Add($"Added {purchase.Symbol} purchase to {wallet.Name}", Severity.Success);
             // You might want to reload wallet data here if needed
