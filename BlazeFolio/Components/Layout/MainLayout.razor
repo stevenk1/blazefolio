@@ -3,7 +3,14 @@
 <MudThemeProvider Theme="@_theme" />
 <MudPopoverProvider />
 <MudDialogProvider />
-<MudSnackbarProvider />
+<MudSnackbarProvider SnackbarConfiguration="@(new SnackbarConfiguration {
+                                                PositionClass = Defaults.Classes.Position.BottomRight,
+                                                ShowTransitionDuration = 200,
+                                                HideTransitionDuration = 200,
+                                                SnackbarVariant = Variant.Filled,
+                                                ShowCloseIcon = true,
+                                                
+                                            })" />
 <MudLayout>
     <MudAppBar Elevation="1">
         <div class="d-flex align-center ml-3">
@@ -43,7 +50,8 @@
                 TextPrimary = "#000000",
                 ActionDefault = "#2EC4B6",
                 ActionDisabled = "#FFFFFF",
-                ActionDisabledBackground = "#CBF3F0"
+                ActionDisabledBackground = "#CBF3F0",
+                Success = "#808080"        // Grey color for success notifications
             }
         
         };

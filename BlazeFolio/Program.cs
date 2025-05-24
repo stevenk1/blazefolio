@@ -2,11 +2,22 @@ using MudBlazor.Services;
 using BlazeFolio.Components;
 using BlazeFolio.Application;
 using BlazeFolio.Infrastructure.Extensions;
+using MudBlazor;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add MudBlazor services
-builder.Services.AddMudServices();
+builder.Services.AddMudServices(config =>
+{
+    config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomRight;
+    config.SnackbarConfiguration.PreventDuplicates = false;
+    config.SnackbarConfiguration.NewestOnTop = false;
+    config.SnackbarConfiguration.ShowCloseIcon = true;
+    config.SnackbarConfiguration.VisibleStateDuration = 4000;
+    config.SnackbarConfiguration.HideTransitionDuration = 200;
+    config.SnackbarConfiguration.ShowTransitionDuration = 200;
+    config.SnackbarConfiguration.SnackbarVariant = Variant.Filled;
+});
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
