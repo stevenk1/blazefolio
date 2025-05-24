@@ -39,7 +39,7 @@ else
                         <MudButton Variant="Variant.Outlined" 
                                   Color="Color.Primary" 
                                   StartIcon="@Icons.Material.Filled.ArrowBack" 
-                                 
+                                  OnClick="@(() => NavigationManager.NavigateTo("/wallets"))" 
                                   Class="mr-2">
                             Back to Wallets
                         </MudButton>
@@ -54,9 +54,23 @@ else
                             </CardHeaderContent>
                         </MudCardHeader>
                         <MudCardContent>
-                      
-                      
-                      b
+                            <MudGrid>
+                                <MudItem xs="6">
+                                    <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Available Cash</MudText>
+                                    <MudText Typo="Typo.h5">@_wallet.Balance.ToString("C2")</MudText>
+                                </MudItem>
+                                <MudItem xs="6">
+                                    <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Total Assets</MudText>
+                                    <MudText Typo="Typo.h5">@_wallet.Assets.Sum(a => a.MarketValue).ToString("C2")</MudText>
+                                </MudItem>
+                                <MudItem xs="12">
+                                    <MudDivider Class="my-2" />
+                                    <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Total Portfolio Value</MudText>
+                                    <MudText Typo="Typo.h4" Color="Color.Primary">
+                                        @((_wallet.Balance + _wallet.Assets.Sum(a => a.MarketValue)).ToString("C2"))
+                                    </MudText>
+                                </MudItem>
+                            </MudGrid>
                         </MudCardContent>
                     </MudCard>
                 </MudItem>
@@ -69,6 +83,37 @@ else
                             </CardHeaderContent>
                         </MudCardHeader>
                         <MudCardContent>
+                            <MudGrid>
+                                <MudItem xs="6">
+                                    <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Total Invested</MudText>
+                                    <MudText Typo="Typo.h6">@_wallet.Assets.Sum(a => a.AveragePrice * a.Shares).ToString("C2")</MudText>
+                                </MudItem>
+                                <MudItem xs="6">
+                                    <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Total P/L</MudText>
+                                    @{
+                                        var totalProfitLoss = _wallet.Assets.Sum(a => a.ProfitLossAmount);
+                                        var profitLossClass = totalProfitLoss >= 0 ? "mud-text-success" : "mud-text-error";
+                                        var sign = totalProfitLoss >= 0 ? "+" : "";
+                                    }
+                                    <MudText Typo="Typo.h6" Class="@profitLossClass">
+                                        @(sign)@totalProfitLoss.ToString("C2")
+                                    </MudText>
+                                </MudItem>
+                                <MudItem xs="12">
+                                    <MudDivider Class="my-2" />
+                                    <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Return on Investment</MudText>
+                                    @{
+                                        var totalInvested = _wallet.Assets.Sum(a => a.AveragePrice * a.Shares);
+                                        var roi = totalInvested > 0 ? (_wallet.Assets.Sum(a => a.ProfitLossAmount) / totalInvested) * 100 : 0;
+                                        var roiClass = roi >= 0 ? "mud-text-success" : "mud-text-error";
+                                        var roiSign = roi >= 0 ? "+" : "";
+                                    }
+                                    <MudText Typo="Typo.h5" Class="@roiClass">
+                                        <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Class="mr-1" />
+                                        @(roiSign)@roi.ToString("0.00")%
+                                    </MudText>
+                                </MudItem>
+                            </MudGrid>
                         </MudCardContent>
                     </MudCard>
                 </MudItem>
@@ -88,13 +133,13 @@ else
                             </CardHeaderActions>
                         </MudCardHeader>
                         <MudCardContent>
-                            @if (true) // Replace with actual check for portfolio holdings
+                            @if (_wallet.Assets == null || !_wallet.Assets.Any())
                             {
                                 <MudAlert Severity="Severity.Info" Class="my-2">No holdings found in this wallet yet.</MudAlert>
                             }
                             else
                             {
-                                <MudTable Items="@(new[]{1})" Hover="true" Breakpoint="Breakpoint.Sm" Loading="false">
+                                <MudTable Items="@_wallet.Assets" Hover="true" Breakpoint="Breakpoint.Sm" Loading="false">
                                     <HeaderContent>
                                         <MudTh>Symbol</MudTh>
                                         <MudTh>Company</MudTh>
@@ -106,17 +151,27 @@ else
                                         <MudTh>P/L (%)</MudTh>
                                         <MudTh>Actions</MudTh>
                                     </HeaderContent>
-                                    <RowTemplate>
-                                        <MudTd>AAPL</MudTd>
-                                        <MudTd>Apple Inc.</MudTd>
-                                        <MudTd>10</MudTd>
-                                        <MudTd>$150.00</MudTd>
-                                        <MudTd>$155.00</MudTd>
-                                        <MudTd>$1,550.00</MudTd>
-                                        <MudTd><span class="mud-text-success">+$50.00</span></MudTd>
-                                        <MudTd><span class="mud-text-success">+3.33%</span></MudTd>
+                                    <RowTemplate Context="asset">
+                                        <MudTd>@asset.Symbol</MudTd>
+                                        <MudTd>@asset.CompanyName</MudTd>
+                                        <MudTd>@asset.Shares</MudTd>
+                                        <MudTd>@asset.AveragePrice.ToString("C2")</MudTd>
+                                        <MudTd>@asset.CurrentPrice.ToString("C2")</MudTd>
+                                        <MudTd>@asset.MarketValue.ToString("C2")</MudTd>
                                         <MudTd>
-                                            <MudIconButton Icon="@Icons.Material.Filled.Sell" Size="Size.Small" />
+                                            <span class="@(asset.ProfitLossAmount >= 0 ? "mud-text-success" : "mud-text-error")">
+                                                @(asset.ProfitLossAmount >= 0 ? "+" : "")@asset.ProfitLossAmount.ToString("C2")
+                                            </span>
+                                        </MudTd>
+                                        <MudTd>
+                                            <span class="@(asset.ProfitLossPercentage >= 0 ? "mud-text-success" : "mud-text-error")">
+                                                @(asset.ProfitLossPercentage >= 0 ? "+" : "")@asset.ProfitLossPercentage.ToString("0.00")%
+                                            </span>
+                                        </MudTd>
+                                        <MudTd>
+                                            <MudIconButton Icon="@Icons.Material.Filled.Sell" 
+                                                          Size="Size.Small"
+                                                          OnClick="@(() => OpenSellAssetDialog(asset))" />
                                         </MudTd>
                                     </RowTemplate>
                                 </MudTable>
@@ -133,7 +188,38 @@ else
                             </CardHeaderContent>
                         </MudCardHeader>
                         <MudCardContent>
-                            <MudAlert Severity="Severity.Info" Class="my-2">No transactions found for this wallet yet.</MudAlert>
+                            @if (_wallet.Assets == null || !_wallet.Assets.Any())
+                            {
+                                <MudAlert Severity="Severity.Info" Class="my-2">No transactions found for this wallet yet.</MudAlert>
+                            }
+                            else
+                            {
+                                <MudSimpleTable Hover="true" Style="overflow-x: auto;">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Type</th>
+                                            <th>Symbol</th>
+                                            <th>Shares</th>
+                                            <th>Price</th>
+                                            <th>Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var asset in _wallet.Assets.Take(5))
+                                        {
+                                            <tr>
+                                                <td>@DateTime.Now.AddDays(-7).ToString("MM/dd/yyyy")</td>
+                                                <td><span class="mud-text-primary">Buy</span></td>
+                                                <td>@asset.Symbol</td>
+                                                <td>@asset.Shares</td>
+                                                <td>@asset.AveragePrice.ToString("C2")</td>
+                                                <td>@((asset.AveragePrice * asset.Shares).ToString("C2"))</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </MudSimpleTable>
+                            }
                         </MudCardContent>
                     </MudCard>
                 </MudItem>
@@ -165,18 +251,36 @@ else
 
         try
         {
-            // Here we're temporarily creating a mock wallet for demonstration
-            // In a real implementation, you would fetch the actual wallet data
-            // var result = await Mediator.Send(new GetWalletById(WalletId));
+            var walletId = Domain.WalletAggregate.ValueObjects.WalletId.Create(WalletId);
+            var result = await Mediator.Send(new GetWalletById(walletId));
 
-            // Temporary mock implementation
-            await Task.Delay(500); // Simulate network delay
-            _wallet = new WalletModel
+            if (result.IsSuccess)
             {
-                Id = WalletId,
-                Name = $"Wallet {WalletId.ToString().Substring(0, 5)}",
-                Balance = 10000.00m
-            };
+                var walletDto = result.Value;
+                _wallet = new WalletModel
+                {
+                    Id = walletDto.Id,
+                    Name = walletDto.Name,
+                    Balance = walletDto.Balance,
+                    Assets = walletDto.Assets.Select(a => new AssetModel
+                    {
+                        Id = a.Id,
+                        Symbol = a.Symbol,
+                        CompanyName = a.CompanyName,
+                        Shares = a.Quantity,
+                        AveragePrice = a.PurchasePrice,
+                        CurrentPrice = a.CurrentPrice,
+                        MarketValue = a.MarketValue,
+                        ProfitLossAmount = a.ProfitLossAmount,
+                        ProfitLossPercentage = a.ProfitLossPercentage
+                    }).ToList()
+                };
+            }
+            else
+            {
+                Snackbar.Add($"Error loading wallet: {result.Error}", Severity.Error);
+                _wallet = null;
+            }
         }
         catch (Exception ex)
         {
@@ -208,10 +312,31 @@ else
         }
     }
 
+    private async Task OpenSellAssetDialog(AssetModel asset)
+    {
+        // This would be implemented to show a dialog for selling assets
+        // For now, we'll just show a snackbar message
+        Snackbar.Add($"Sell functionality for {asset.Symbol} will be implemented in a future update", Severity.Info);
+    }
+
     public class WalletModel
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public decimal Balance { get; set; }
+        public List<AssetModel> Assets { get; set; } = new();
+    }
+
+    public class AssetModel
+    {
+        public Guid Id { get; set; }
+        public string Symbol { get; set; } = string.Empty;
+        public string CompanyName { get; set; } = string.Empty;
+        public int Shares { get; set; }
+        public decimal AveragePrice { get; set; }
+        public decimal CurrentPrice { get; set; }
+        public decimal MarketValue { get; set; }
+        public decimal ProfitLossAmount { get; set; }
+        public decimal ProfitLossPercentage { get; set; }
     }
 }

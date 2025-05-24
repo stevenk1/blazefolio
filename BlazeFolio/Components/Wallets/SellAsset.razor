@@ -1,0 +1,129 @@
+@using MediatR
+@using BlazeFolio.Services
+@using BlazeFolio.Components.Shared
+@inject IMediator Mediator
+@inject ErrorHandler ErrorHandler
+@inject ISnackbar Snackbar
+
+<SharedDialog @ref="_dialog" Class="sell-asset-dialog">
+    <ChildContent>
+        <MudForm @ref="_form" @bind-IsValid="@_isValid">
+            <MudText Typo="Typo.h6" Class="mb-3">Sell @Symbol</MudText>
+
+            <MudText Typo="Typo.subtitle1" Class="mb-1">Shares to Sell</MudText>
+            <MudNumericField T="int" 
+                             @bind-Value="_quantity" 
+                             Required="true" 
+                             RequiredError="Quantity is required"
+                             Min="1"
+                             Max="@MaxShares"
+                             Variant="Variant.Outlined"
+                             FullWidth
+                             Class="mb-4" />
+
+            <MudText Typo="Typo.subtitle1" Class="mb-1">Sell Price</MudText>
+            <MudNumericField T="decimal"
+                             @bind-Value="_price" 
+                             Required="true"
+                             RequiredError="Price is required"
+                             Min="0.01M"
+                             Format="N2"
+                             AdornmentIcon="@Icons.Material.Filled.AttachMoney"
+                             Adornment="Adornment.Start"
+                             Variant="Variant.Outlined"
+                             FullWidth
+                             Class="mb-4" />
+
+            <MudText Typo="Typo.subtitle1" Class="mb-1">Sale Date</MudText>
+            <MudDatePicker @bind-Date="_saleDate"
+                           Required="true"
+                           RequiredError="Date is required"
+                           Variant="Variant.Outlined"
+                           FullWidth
+                           Class="mb-4" />
+
+            <MudDivider Class="my-4" />
+
+            <MudText Typo="Typo.subtitle1">Sale Summary</MudText>
+            <MudPaper Elevation="0" Outlined="true" Class="pa-3 my-2">
+                <div class="d-flex justify-space-between">
+                    <MudText>Shares:</MudText>
+                    <MudText>@_quantity</MudText>
+                </div>
+                <div class="d-flex justify-space-between">
+                    <MudText>Price per Share:</MudText>
+                    <MudText>@_price.ToString("C2")</MudText>
+                </div>
+                <div class="d-flex justify-space-between">
+                    <MudText>Total Sale Amount:</MudText>
+                    <MudText Typo="Typo.h6">@((_quantity * _price).ToString("C2"))</MudText>
+                </div>
+            </MudPaper>
+        </MudForm>
+    </ChildContent>
+    <ActionContent>
+        <MudButton Variant="Variant.Text" OnClick="Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Disabled="@(!_isValid)"
+                   OnClick="SubmitSale">
+            Confirm Sale
+        </MudButton>
+    </ActionContent>
+</SharedDialog>
+
+@code {
+    [Parameter] public Guid WalletId { get; set; }
+    [Parameter] public string WalletName { get; set; } = string.Empty;
+    [Parameter] public Guid AssetId { get; set; }
+    [Parameter] public string Symbol { get; set; } = string.Empty;
+    [Parameter] public int MaxShares { get; set; } = 1;
+    [Parameter] public decimal CurrentPrice { get; set; } = 0.0m;
+
+    private SharedDialog _dialog = null!;
+    private MudForm _form = null!;
+    private bool _isValid;
+    private bool _processing;
+    private int _quantity = 1;
+    private decimal _price;
+    private DateTime? _saleDate = DateTime.Today;
+
+    protected override void OnInitialized()
+    {
+        // Initialize with current price and max shares
+        _price = CurrentPrice;
+        _quantity = MaxShares;
+    }
+
+    private void Cancel()
+    {
+        _dialog.Cancel();
+    }
+
+    private async Task SubmitSale()
+    {
+        if (!_isValid || !_saleDate.HasValue || _processing)
+            return;
+
+        _processing = true;
+
+        try
+        {
+            // This would be implemented to record a stock sale
+            // For now, we'll just close the dialog with success
+            Snackbar.Add($"Sale functionality will be implemented in a future update", Severity.Info);
+            _dialog.Close(new SaleResult(Symbol, _saleDate.Value, _price, _quantity));
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleException(ex, "Error recording asset sale", "SellAsset.SubmitSale");
+            Snackbar.Add("Failed to record asset sale", Severity.Error);
+        }
+        finally
+        {
+            _processing = false;
+        }
+    }
+
+    public record SaleResult(string Symbol, DateTime SaleDate, decimal Price, int Quantity);
+}
