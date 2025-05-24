@@ -23,9 +23,7 @@
                           Required="true"
                           RequiredError="Date is required"
                           Variant="Variant.Outlined"
-                          FullWidth
                           Class="mb-4" />
-
                                       <MudGrid>
                                           <MudItem xs="6">
                                               <MudText Typo="Typo.subtitle1" Class="mb-1">Price</MudText>
@@ -101,7 +99,7 @@
         try
         {
             var walletId = Domain.WalletAggregate.ValueObjects.WalletId.Create(WalletId);
-            var result = await Mediator.Send(new BlazeFolio.Application.Wallets.Features.Commands.RecordStockPurchase(
+            var result = await Mediator.Send(new BlazeFolio.Application.Wallets.Features.Commands.RecordAssetTransaction(
                 walletId, 
                 Symbol, 
                 _purchaseDate.Value, 

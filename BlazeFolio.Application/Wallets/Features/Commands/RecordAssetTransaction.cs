@@ -7,23 +7,23 @@ using MediatR;
 
 namespace BlazeFolio.Application.Wallets.Features.Commands;
 
-public record RecordStockPurchase(
+public record RecordAssetTransaction(
     WalletId WalletId,
     string Symbol,
     DateTime PurchaseDate,
     decimal Price,
     int Quantity) : IRequest<Result>;
 
-public class RecordStockPurchaseHandler : IRequestHandler<RecordStockPurchase, Result>
+public class RecordAssetTransactionHandler : IRequestHandler<RecordAssetTransaction, Result>
 {
     private readonly IWalletRepository _walletRepository;
 
-    public RecordStockPurchaseHandler(IWalletRepository walletRepository)
+    public RecordAssetTransactionHandler(IWalletRepository walletRepository)
     {
         _walletRepository = walletRepository;
     }
 
-    public async Task<Result> Handle(RecordStockPurchase request, CancellationToken cancellationToken)
+    public async Task<Result> Handle(RecordAssetTransaction request, CancellationToken cancellationToken)
     {
         var wallet = await _walletRepository.GetByIdAsync(request.WalletId);
 

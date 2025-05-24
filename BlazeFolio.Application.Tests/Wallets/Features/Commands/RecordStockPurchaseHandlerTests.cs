@@ -7,13 +7,13 @@ namespace BlazeFolio.Application.Tests.Wallets.Features.Commands;
 
 public class RecordStockPurchaseHandlerTests : IClassFixture<DatabaseFixture>
 {
-    private readonly RecordStockPurchaseHandler _handler;
+    private readonly RecordAssetTransactionHandler _handler;
     private readonly DatabaseFixture _fixture;
 
     public RecordStockPurchaseHandlerTests(DatabaseFixture fixture)
     {
         _fixture = fixture;
-        _handler = new RecordStockPurchaseHandler(_fixture.WalletRepository);
+        _handler = new RecordAssetTransactionHandler(_fixture.WalletRepository);
     }
 
     [Fact]
@@ -23,7 +23,7 @@ public class RecordStockPurchaseHandlerTests : IClassFixture<DatabaseFixture>
         var wallet = Wallet.CreateNew("Test Wallet", [1, 2, 3]);
         var addedWallet = await _fixture.WalletRepository.AddAsync(wallet);
 
-        var command = new RecordStockPurchase(
+        var command = new RecordAssetTransaction(
             addedWallet.Id,
             "AAPL",
             DateTime.UtcNow,
@@ -52,7 +52,7 @@ public class RecordStockPurchaseHandlerTests : IClassFixture<DatabaseFixture>
     {
         // Arrange
         var walletId = WalletId.CreateUnique();
-        var command = new RecordStockPurchase(
+        var command = new RecordAssetTransaction(
             walletId,
             "MSFT",
             DateTime.UtcNow,
