@@ -23,13 +23,24 @@
             {
                 <MudItem xs="12" sm="6" md="4" lg="3">
                     <MudCard Outlined="true" Elevation="2">
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.h6">@wallet.Name</MudText>
+                            </CardHeaderContent>
+                            <CardHeaderActions>
+                                <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                               Color="Color.Secondary" Size="Size.Small"
+                                               Class="ml-auto"
+                                               OnClick="@(() => OnDeleteWallet.InvokeAsync(wallet))"/>
+
+                            </CardHeaderActions>
+                        </MudCardHeader>
                         <MudCardContent>
-                            <MudText Typo="Typo.h6" Class="font-weight-bold">@wallet.Name</MudText>
                             <MudText Typo="Typo.body2" Color="Color.Secondary">
                                 Created: @DateTime.Now.ToString("MMM dd, yyyy") &bull; 0 asset(s)
                             </MudText>
 
-                            <MudDivider Class="my-2" />
+                            <MudDivider Class="my-2"/>
 
                             <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Balance</MudText>
                             <MudText Typo="Typo.h6" Class="mb-2">@wallet.Balance.ToString("C2")</MudText>
@@ -39,14 +50,15 @@
 
                             <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Profit/Loss</MudText>
                             <MudText Typo="Typo.h6" Color="Color.Success">
-                                <MudIcon Icon="@Icons.Material.Filled.ShowChart" Class="mr-1" />
+                                <MudIcon Icon="@Icons.Material.Filled.ShowChart" Class="mr-1"/>
                                 $0.00 (0.00%)
                             </MudText>
-                            <MudButton  Variant="Variant.Outlined" Color="Color.Secondary" FullWidth=true 
-                                       EndIcon="@Icons.Material.Filled.ArrowForward" >
+                            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" FullWidth=true
+                                       EndIcon="@Icons.Material.Filled.ArrowForward"
+                                       OnClick="@(() => OnViewDetails.InvokeAsync(wallet))">
                                 View Details
                             </MudButton>
-                            @* OnClick="@(() => OnViewDetails(wallet))"> *@
+
                         </MudCardContent>
                     </MudCard>
                 </MudItem>
