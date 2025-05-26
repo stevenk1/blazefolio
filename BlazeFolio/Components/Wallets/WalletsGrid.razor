@@ -37,7 +37,7 @@
                         </MudCardHeader>
                         <MudCardContent>
                             <MudText Typo="Typo.body2" Color="Color.Secondary">
-                                Created: @DateTime.Now.ToString("MMM dd, yyyy") &bull; @wallet.AssetCount asset(s)
+                                Created: @DateTime.Now.ToString("MMM dd, yyyy") &bull; 0 asset(s)
                             </MudText>
 
                             <MudDivider Class="my-2"/>
@@ -46,12 +46,12 @@
                             <MudText Typo="Typo.h6" Class="mb-2">@wallet.Balance.ToString("C2")</MudText>
 
                             <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Market Value</MudText>
-                            <MudText Typo="Typo.h6" Class="mb-2">@wallet.MarketValue.ToString("C2")</MudText>
+                            <MudText Typo="Typo.h6" Class="mb-2">$0.00</MudText>
 
                             <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Profit/Loss</MudText>
-                            <MudText Typo="Typo.h6" Color="@(wallet.ProfitPercent >= 0 ? Color.Success : Color.Error)">
+                            <MudText Typo="Typo.h6" Color="Color.Success">
                                 <MudIcon Icon="@Icons.Material.Filled.ShowChart" Class="mr-1"/>
-                                @wallet.Profit.ToString("C2") (@wallet.ProfitPercent.ToString("0.##")%)
+                                $0.00 (0.00%)
                             </MudText>
                             <MudButton Variant="Variant.Outlined" Color="Color.Secondary" FullWidth=true
                                        EndIcon="@Icons.Material.Filled.ArrowForward"
@@ -91,9 +91,5 @@
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public decimal Balance { get; set; }
-        public decimal MarketValue { get; set; }
-        public decimal Profit { get; set; }
-        public decimal ProfitPercent { get; set; }
-        public int AssetCount { get; set; }
     }
 }

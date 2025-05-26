@@ -14,10 +14,4 @@
       <PackageReference Include="LiteDB" Version="5.0.17" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Reference Include="Microsoft.Extensions.Hosting.Abstractions">
-        <HintPath>..\..\..\..\..\usr\local\share\dotnet\shared\Microsoft.AspNetCore.App\9.0.5\Microsoft.Extensions.Hosting.Abstractions.dll</HintPath>
-      </Reference>
-    </ItemGroup>
-
 </Project>

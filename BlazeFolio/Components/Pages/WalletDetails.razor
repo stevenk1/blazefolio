@@ -4,13 +4,11 @@
 @using BlazeFolio.Services
 @using System.Linq
 @using BlazeFolio.Components.Wallets
-@using BlazeFolio.Application.Contracts.Infrastructure
 @inject IMediator Mediator
 @inject ErrorHandler ErrorHandler
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject NavigationManager NavigationManager
-@inject IFusionCache FusionCache
 
 <PageTitle>Wallet Details</PageTitle>
 
@@ -82,18 +80,7 @@ else
                                                 <MudText Typo="Typo.h6">@group.Key</MudText>
                                                 <MudText Typo="Typo.body2">Total Shares: @totalShares</MudText>
                                             </div>
-                                            <div class="d-flex flex-column align-end">
-                                                @{
-                                                    var totalMarketValue = group.Sum(a => a.CurrentPrice * a.Shares);
-                                                    var totalChange = totalMarketValue - totalValue;
-                                                    var totalChangePercent = totalValue > 0 ? (totalMarketValue / totalValue - 1) * 100 : 0;
-                                                    var changeColor = totalChangePercent >= 0 ? Color.Success : Color.Error;
-                                                }
-                                                <MudText Typo="Typo.h6">@totalMarketValue.ToString("C2")</MudText>
-                                                <MudText Typo="Typo.caption" Color="@changeColor">
-                                                    @totalChange.ToString("C2") (@totalChangePercent.ToString("0.##")%)
-                                                </MudText>
-                                            </div>
+                                            <MudText Typo="Typo.h6" Class="mud-primary-text">@totalValue.ToString("C2")</MudText>
                                         </div>
                                     </TitleContent>
                                     <ChildContent>
@@ -102,9 +89,7 @@ else
                                             <HeaderContent>
                                                 <MudTh>Date</MudTh>
                                                 <MudTh>Shares</MudTh>
-                                                <MudTh>Purchase Price</MudTh>
-                                                <MudTh>Current Price</MudTh>
-                                                <MudTh>Change</MudTh>
+                                                <MudTh>Price</MudTh>
                                                 <MudTh>Value</MudTh>
                                                 <MudTh></MudTh>
                                             </HeaderContent>
@@ -112,19 +97,12 @@ else
                                                 <MudTd>@asset.PurchaseDate.ToString("MM/dd/yyyy")</MudTd>
                                                 <MudTd>@asset.Shares</MudTd>
                                                 <MudTd>@asset.Price.ToString("C2")</MudTd>
-                                                <MudTd>@asset.CurrentPrice.ToString("C2")</MudTd>
-                                                <MudTd>
-                                                    <MudText Color="@asset.ChangeColor">
-                                                        @asset.PercentChangeDisplay
-                                                    </MudText>
-                                                </MudTd>
-                                                <MudTd>@((asset.CurrentPrice * asset.Shares).ToString("C2"))</MudTd>
+                                                <MudTd>@((asset.Price * asset.Shares).ToString("C2"))</MudTd>
                                                 <MudTd>
                                                     <MudIconButton Icon="@Icons.Material.Filled.Sell"
                                                                    Size="Size.Small"
                                                                    OnClick="@(() => OpenSellAssetDialog(asset))"/>
                                                 </MudTd>
-                                                <AssetPriceListener Symbol="@asset.Symbol" OnPriceChanged="@(price => UpdateAssetPrice(asset, price))" />
                                             </RowTemplate>
                                         </MudTable>
                                     </ChildContent>
@@ -158,15 +136,6 @@ else
         await LoadWalletAsync();
     }
 
-    private async Task UpdateAssetPrice(AssetModel asset, decimal newPrice)
-    {
-        // Update the price in our model
-        asset.CurrentPrice = newPrice;
-
-        // Request a UI refresh - this is already on the UI thread because we're using InvokeAsync in the listener
-        StateHasChanged();
-    }
-
     private async Task LoadWalletAsync()
     {
         _loading = true;
@@ -189,25 +158,9 @@ else
                         Id = a.Id.Value,
                         Symbol = a.Symbol,
                         Shares = a.Quantity,
-                        PurchaseDate = a.PurchaseDate,
-                        Price = a.Price,
-                        CurrentPrice = 0 // Will be populated below
+                        PurchaseDate = a.PurchaseDate
                     }).ToList()
                 };
-
-                // Fetch current prices for all assets
-                foreach (var asset in _wallet.Assets)
-                {
-                    try
-                    {
-                        asset.CurrentPrice = await FusionCache.GetCurrentPriceAsync(asset.Symbol);
-                    }
-                    catch (Exception ex)
-                    {
-                        ErrorHandler.HandleException(ex, $"Error fetching current price for {asset.Symbol}", "WalletDetails.LoadWalletAsync");
-                        asset.CurrentPrice = asset.Price; // Use purchase price as fallback
-                    }
-                }
             }
             else
             {
@@ -266,13 +219,7 @@ else
         public string Symbol { get; set; } = string.Empty;
         public int Shares { get; set; }
         public decimal Price { get; set; }
-        public decimal CurrentPrice { get; set; }
         public DateTime PurchaseDate { get; set; }
-
-        public decimal PercentChange => Price > 0 ? (CurrentPrice / Price - 1) * 100 : 0;
-        public string PercentChangeDisplay => $"{PercentChange:0.##}%";
-        public bool IsPositiveChange => PercentChange >= 0;
-        public Color ChangeColor => IsPositiveChange ? Color.Success : Color.Error;
     }
 
 }
