@@ -4,6 +4,7 @@
 @using BlazeFolio.Services
 @using System.Linq
 @using BlazeFolio.Components.Wallets
+@using MudBlazor
 @inject IMediator Mediator
 @inject ErrorHandler ErrorHandler
 @inject IDialogService DialogService
@@ -72,15 +73,24 @@ else
                             {
                                 var totalShares = group.Sum(a => a.Shares);
                                 var totalValue = group.Sum(a => a.Price * a.Shares);
-
-                                <MudExpansionPanel>
-                                    <TitleContent>
-                                        <div class="d-flex justify-space-between align-center" style="width: 100%">
-                                            <div>
-                                                <MudText Typo="Typo.h6">@group.Key</MudText>
-                                                <MudText Typo="Typo.body2">Total Shares: @totalShares</MudText>
+                                var totalCurrentValue = group.Sum(a => a.CurrentPrice.HasValue ? a.CurrentPrice.Value * a.Shares : 0);
+                                   
+                                    <MudExpansionPanel>
+                                        <TitleContent>
+                                            <div class="d-flex justify-space-between align-center" style="width: 100%">
+                                                <div>
+                                                    <MudText Typo="Typo.h6">@group.Key</MudText>
+                                                    <MudText Typo="Typo.body2">Total Shares: @totalShares</MudText>
                                             </div>
-                                            <MudText Typo="Typo.h6" Class="mud-primary-text">@totalValue.ToString("C2")</MudText>
+                                            <div class="text-right">
+                                                <MudText Typo="Typo.h6" Class="mud-primary-text">@totalCurrentValue.ToString("C2")</MudText>
+                                                @if (totalValue > 0 && totalCurrentValue > 0)
+                                                {
+                                                    var percentProfit = ((totalCurrentValue - totalValue) / totalValue) * 100;
+                                                    var profitColor = percentProfit >= 0 ? Color.Success : Color.Error;
+                                                    <MudText Typo="Typo.body2" Color="@profitColor">@(percentProfit >= 0 ? "+" : "")@percentProfit.ToString("0.00")%</MudText>
+                                                }
+                                            </div>
                                         </div>
                                     </TitleContent>
                                     <ChildContent>
@@ -90,6 +100,9 @@ else
                                                 <MudTh>Date</MudTh>
                                                 <MudTh>Shares</MudTh>
                                                 <MudTh>Price</MudTh>
+                                                <MudTh>Current</MudTh>
+                                                <MudTh>Change %</MudTh>
+                                                <MudTh>Profit</MudTh>
                                                 <MudTh>Value</MudTh>
                                                 <MudTh></MudTh>
                                             </HeaderContent>
@@ -97,7 +110,32 @@ else
                                                 <MudTd>@asset.PurchaseDate.ToString("MM/dd/yyyy")</MudTd>
                                                 <MudTd>@asset.Shares</MudTd>
                                                 <MudTd>@asset.Price.ToString("C2")</MudTd>
-                                                <MudTd>@((asset.Price * asset.Shares).ToString("C2"))</MudTd>
+                                                <MudTd>@(asset.CurrentPrice?.ToString("C2") ?? "--")</MudTd>
+                                                <MudTd>
+                                                    @if (asset.CurrentPrice.HasValue)
+                                                    {
+                                                        var percentChange = ((asset.CurrentPrice.Value - asset.Price) / asset.Price) * 100;
+                                                        var color = percentChange >= 0 ? Color.Success : Color.Error;
+                                                        <MudText Color="@color">@(percentChange >= 0 ? "+" : "")@percentChange.ToString("0.00")%</MudText>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span>--</span>
+                                                    }
+                                                </MudTd>
+                                                <MudTd>
+                                                    @if (asset.CurrentPrice.HasValue)
+                                                    {
+                                                        var profit = (asset.CurrentPrice.Value - asset.Price) * asset.Shares;
+                                                        var color = profit >= 0 ? Color.Success : Color.Error;
+                                                        <MudText Color="@color">@profit.ToString("C2")</MudText>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span>--</span>
+                                                    }
+                                                </MudTd>
+                                                <MudTd>@(asset.CurrentPrice.HasValue ? (asset.CurrentPrice.Value * asset.Shares).ToString("C2") : (asset.Price * asset.Shares).ToString("C2"))</MudTd>
                                                 <MudTd>
                                                     <MudIconButton Icon="@Icons.Material.Filled.Sell"
                                                                    Size="Size.Small"
@@ -162,6 +200,9 @@ else
                         Price = a.Price
                     }).ToList()
                 };
+
+                // Fetch current prices for all assets
+                await LoadCurrentPricesAsync();
             }
             else
             {
@@ -206,6 +247,39 @@ else
         Snackbar.Add($"Sell functionality for {asset.Symbol} will be implemented in a future update", Severity.Info);
     }
 
+    private async Task LoadCurrentPricesAsync()
+    {
+        if (_wallet == null || !_wallet.Assets.Any())
+            return;
+
+        try
+        {
+            // Get unique symbols to avoid duplicate requests
+            var uniqueSymbols = _wallet.Assets.Select(a => a.Symbol).Distinct().ToList();
+
+            // Get all prices in a single batch request
+            var result = await Mediator.Send(new GetCurrentMarketPrices(uniqueSymbols));
+
+            if (result.IsSuccess)
+            {
+                var prices = result.Value;
+
+                // Update all assets with their current prices
+                foreach (var asset in _wallet.Assets)
+                {
+                    if (prices.TryGetValue(asset.Symbol, out var price) && price.HasValue)
+                    {
+                        asset.CurrentPrice = price.Value;
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleException(ex, "Error loading current prices", "WalletDetails.LoadCurrentPricesAsync");
+        }
+    }
+
     public class WalletModel
     {
         public Guid Id { get; set; }
@@ -221,6 +295,7 @@ else
         public int Shares { get; set; }
         public decimal Price { get; set; }
         public DateTime PurchaseDate { get; set; }
+        public decimal? CurrentPrice { get; set; }
     }
 
 }
