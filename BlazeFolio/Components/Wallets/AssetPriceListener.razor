@@ -1,0 +1,53 @@
+@using BlazeFolio.Application.Contracts.Infrastructure
+@inject IPriceUpdateService PriceUpdateService
+@implements IAsyncDisposable
+
+@code {
+    [Parameter, EditorRequired] public string Symbol { get; set; } = string.Empty;
+    [Parameter] public EventCallback<decimal> OnPriceChanged { get; set; }
+
+    private Guid _subscriptionId;
+    private bool _isSubscribed;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await SubscribeToUpdates();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!_isSubscribed || string.IsNullOrEmpty(Symbol))
+        {
+            await SubscribeToUpdates();
+        }
+    }
+
+    private async Task SubscribeToUpdates()
+    {
+        if (!string.IsNullOrEmpty(Symbol) && !_isSubscribed)
+        {
+            _subscriptionId = await PriceUpdateService.SubscribeAsync(Symbol, HandlePriceUpdate);
+            _isSubscribed = true;
+        }
+    }
+
+    private async Task HandlePriceUpdate(string symbol, decimal price)
+    {
+        if (symbol == Symbol)
+        {
+            await InvokeAsync(async () => 
+            {
+                await OnPriceChanged.InvokeAsync(price);
+            });
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_isSubscribed)
+        {
+            await PriceUpdateService.UnsubscribeAsync(Symbol, _subscriptionId);
+            _isSubscribed = false;
+        }
+    }
+}

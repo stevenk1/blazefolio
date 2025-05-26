@@ -36,6 +36,12 @@ string connectionString = $"Filename={dbPath};Connection=shared";
 // Add infrastructure services
 builder.Services.AddInfrastructure(connectionString);
 
+// Register PriceUpdateService as a singleton to maintain subscriptions across the application
+builder.Services.AddSingleton<BlazeFolio.Application.Contracts.Infrastructure.IPriceUpdateService, BlazeFolio.Infrastructure.Services.PriceUpdateService>();
+
+// Register the background service that periodically updates prices
+builder.Services.AddHostedService<BlazeFolio.Infrastructure.Services.BackgroundPriceUpdateService>();
+
 // Configure logging
 builder.Logging
     .ClearProviders() // Optional: Clear default providers
