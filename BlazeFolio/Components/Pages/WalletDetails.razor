@@ -29,7 +29,7 @@ else if (_wallet == null)
 else
 {
     <MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
-        <MudPaper Elevation="3" Class="pa-4">
+        <MudPaper Elevation="0" Class="pa-4">
             <MudGrid>
                 <MudItem xs="12" md="12">
                     <MudButton Variant="Variant.Text"
@@ -58,10 +58,6 @@ else
 
 
                 <MudItem xs="12" Class="mb-4">
-
-
-
-
                     @if (!_wallet.Assets.Any())
                     {
                         <MudAlert Severity="Severity.Info" Class="my-2">No holdings found in this wallet yet.</MudAlert>
@@ -96,7 +92,7 @@ else
                                     </TitleContent>
                                     <ChildContent>
                                         <MudTable Items="@group" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm" 
-                                                  Class="mt-2">
+                                              Elevation="0"    Class="mt-2">
                                             <HeaderContent>
                                                 <MudTh>Date</MudTh>
                                                 <MudTh>Shares</MudTh>
