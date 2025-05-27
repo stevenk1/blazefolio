@@ -35,7 +35,7 @@ public class RecordAssetTransactionHandler : IRequestHandler<RecordAssetTransact
             return Result.Failure($"Wallet with id: {request.WalletId} not found.");
         }
 
-        var asset = Asset.Create(request.Symbol, request.PurchaseDate, request.Quantity, request.Price,string.Empty,string.Empty);
+        var asset = Asset.Create(request.Symbol, request.PurchaseDate, request.Quantity, request.Price);
         wallet.AddAsset(asset);
 
         // Fetch metadata for the asset and store it

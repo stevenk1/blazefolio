@@ -11,6 +11,7 @@ public class Asset : Entity<AssetId>
     public decimal Price { get; private set; }
     public string? LongName { get; private set; }
     public string? QuoteType { get; private set; }
+    public string? Currency { get; private set; }
 
     private Asset(AssetId id, string symbol, DateTime purchaseDate, int quantity, decimal price)
         : base(id)
@@ -18,7 +19,7 @@ public class Asset : Entity<AssetId>
         
     }
 
-    private Asset(AssetId id, string symbol, DateTime purchaseDate, int quantity, decimal price, string? longName, string? quoteType): base(id)
+    private Asset(AssetId id, string symbol, DateTime purchaseDate, int quantity, decimal price, string? longName, string? quoteType, string? currency): base(id)
     {
         Symbol = symbol;
         PurchaseDate = purchaseDate;
@@ -26,6 +27,7 @@ public class Asset : Entity<AssetId>
         Price = price;
         LongName = longName;
         QuoteType = quoteType;
+        Currency = currency;
     }
 
 
@@ -33,9 +35,10 @@ public class Asset : Entity<AssetId>
     {
         LongName = metadata.LongName;
         QuoteType = metadata.QuoteType;
+        Currency = metadata.Currency;
     }
 
-    public static Asset Create(string symbol, DateTime purchaseDate, int quantity, decimal price, string? longName, string? quoteType)
+    public static Asset Create(string symbol, DateTime purchaseDate, int quantity, decimal price)
     {
         return new Asset(
             AssetId.CreateUnique(),
@@ -43,8 +46,23 @@ public class Asset : Entity<AssetId>
             purchaseDate,
             quantity,
             price,
-            longName,
-            quoteType);
+            null, 
+            null,
+            null);
+        
+    }
+    
+    public static Asset Create(string symbol, DateTime purchaseDate, int quantity, decimal price,string? longname,string? quoteType,string? currency)
+    {
+        return new Asset(
+            AssetId.CreateUnique(),
+            symbol,
+            purchaseDate,
+            quantity,
+            price,
+            longname, 
+            quoteType,
+            currency);
         
     }
 }

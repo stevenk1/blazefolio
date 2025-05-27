@@ -115,8 +115,20 @@ else
                                             <RowTemplate Context="asset">
                                                 <MudTd>@asset.PurchaseDate.ToString("MM/dd/yyyy")</MudTd>
                                                 <MudTd>@asset.Shares</MudTd>
-                                                <MudTd>@asset.Price.ToString("C2")</MudTd>
-                                                <MudTd>@(asset.CurrentPrice?.ToString("C2") ?? "--")</MudTd>
+                                                <MudTd>
+                                                    @asset.Price.ToString("C2")
+                                                    @if (!string.IsNullOrEmpty(asset.Currency))
+                                                    {
+                                                        <small class="mud-secondary-text ml-1">(@asset.Currency)</small>
+                                                    }
+                                                </MudTd>
+                                                <MudTd>
+                                                    @(asset.CurrentPrice?.ToString("C2") ?? "--")
+                                                    @if (!string.IsNullOrEmpty(asset.Currency) && asset.CurrentPrice.HasValue)
+                                                    {
+                                                        <small class="mud-secondary-text ml-1">(@asset.Currency)</small>
+                                                    }
+                                                </MudTd>
                                                 <MudTd>
                                                     @if (asset.CurrentPrice.HasValue)
                                                     {
@@ -202,6 +214,7 @@ else
                         Id = a.Id.Value,
                         Symbol = a.Symbol,
                         LongName = a.LongName,
+                        Currency = a.Currency,
                         Shares = a.Quantity,
                         PurchaseDate = a.PurchaseDate,
                         Price = a.Price
@@ -320,6 +333,7 @@ else
         public Guid Id { get; set; }
         public string Symbol { get; set; } = string.Empty;
         public string? LongName { get; set; }
+        public string? Currency { get; set; }
         public int Shares { get; set; }
         public decimal Price { get; set; }
         public DateTime PurchaseDate { get; set; }

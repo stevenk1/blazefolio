@@ -17,6 +17,8 @@ public class AssetModel
 
     public string? LongName { get; set; }
     
+    public string? Currency { get; set; }
+    
     // Parameterless constructor required by LiteDB
     public AssetModel()
     {
@@ -34,7 +36,7 @@ public class AssetModel
             PurchaseDate = asset.PurchaseDate,
             LongName = asset.LongName,
             QuoteType= asset.QuoteType,
-            
+            Currency = asset.Currency,
         };
     }
 
@@ -47,7 +49,8 @@ public class AssetModel
             Quantity,
             Price,
             LongName,
-            QuoteType
+            QuoteType,
+            Currency
         );
     }
 }

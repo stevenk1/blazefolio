@@ -11,5 +11,10 @@ namespace BlazeFolio.Domain.Models
         /// The type of security (e.g., EQUITY, ETF, INDEX)
         /// </summary>
         public string? QuoteType { get; set; }
+
+        /// <summary>
+        /// The currency in which the security is traded
+        /// </summary>
+        public string? Currency { get; set; }
     }
 }

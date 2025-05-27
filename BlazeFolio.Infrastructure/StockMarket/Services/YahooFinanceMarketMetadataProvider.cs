@@ -12,7 +12,7 @@ namespace BlazeFolio.Infrastructure.StockMarket.Services
             {
                 // Get security metadata from Yahoo Finance API
                 var securities = await Yahoo.Symbols(symbol)
-                    .Fields(Field.LongName, Field.QuoteType)
+                    .Fields(Field.LongName, Field.QuoteType, Field.Currency)
                     .QueryAsync();
 
                 if (securities.TryGetValue(symbol, out var security))
@@ -29,6 +29,12 @@ namespace BlazeFolio.Infrastructure.StockMarket.Services
                     if (quoteType != null)
                     {
                         metadata.QuoteType = quoteType.ToString();
+                    }
+
+                    var currency = security[Field.Currency];
+                    if (currency != null)
+                    {
+                        metadata.Currency = currency.ToString();
                     }
 
                     return metadata;
@@ -57,7 +63,7 @@ namespace BlazeFolio.Infrastructure.StockMarket.Services
             {
                 // Get metadata for multiple symbols in a single batch request
                 var securities = await Yahoo.Symbols(symbolsList.ToArray())
-                    .Fields(Field.LongName, Field.QuoteType)
+                    .Fields(Field.LongName, Field.QuoteType, Field.Currency)
                     .QueryAsync();
 
                 foreach (var symbol in symbolsList)
@@ -76,6 +82,12 @@ namespace BlazeFolio.Infrastructure.StockMarket.Services
                         if (quoteType != null)
                         {
                             metadata.QuoteType = quoteType.ToString();
+                        }
+
+                        var currency = security[Field.Currency];
+                        if (currency != null)
+                        {
+                            metadata.Currency = currency.ToString();
                         }
 
                         result[symbol] = metadata;
