@@ -1,4 +1,5 @@
 @page "/wallet/{WalletId:guid}"
+@using System.Globalization
 @using MediatR
 @using BlazeFolio.Application.Wallets.Features.Queries
 @using BlazeFolio.Services
@@ -89,7 +90,7 @@ else
                                                     </MudButton>
                                                 </div>
                                             <div class="text-right">
-                                                <MudText Typo="Typo.h6" Class="mud-primary-text">@totalCurrentValue.ToString("C2")</MudText>
+                                                <MudText Typo="Typo.h6" Class="mud-primary-text">@totalCurrentValue.ToString("C", CultureInfo.GetCultureInfo($"en-{group.FirstOrDefault()?.Currency?[..2]}"))</MudText>
                                                 @if (totalValue > 0 && totalCurrentValue > 0)
                                                 {
                                                     var percentProfit = ((totalCurrentValue - totalValue) / totalValue) * 100;
@@ -116,18 +117,13 @@ else
                                                 <MudTd>@asset.PurchaseDate.ToString("MM/dd/yyyy")</MudTd>
                                                 <MudTd>@asset.Shares</MudTd>
                                                 <MudTd>
-                                                    @asset.Price.ToString("C2")
-                                                    @if (!string.IsNullOrEmpty(asset.Currency))
+                                                    @if (asset.Currency != null)
                                                     {
-                                                        <small class="mud-secondary-text ml-1">(@asset.Currency)</small>
+                                                        @asset.Price.ToString("C", CultureInfo.GetCultureInfo($"en-{asset.Currency[..2]}"))
                                                     }
                                                 </MudTd>
                                                 <MudTd>
-                                                    @(asset.CurrentPrice?.ToString("C2") ?? "--")
-                                                    @if (!string.IsNullOrEmpty(asset.Currency) && asset.CurrentPrice.HasValue)
-                                                    {
-                                                        <small class="mud-secondary-text ml-1">(@asset.Currency)</small>
-                                                    }
+                                                    @asset.CurrentPrice?.ToString("C", CultureInfo.GetCultureInfo($"en-{asset.Currency?[..2]}"))
                                                 </MudTd>
                                                 <MudTd>
                                                     @if (asset.CurrentPrice.HasValue)
@@ -146,14 +142,19 @@ else
                                                     {
                                                         var profit = (asset.CurrentPrice.Value - asset.Price) * asset.Shares;
                                                         var color = profit >= 0 ? Color.Success : Color.Error;
-                                                        <MudText Color="@color">@profit.ToString("C2")</MudText>
+                                                        <MudText Color="@color">@profit.ToString("C", CultureInfo.GetCultureInfo($"en-{asset.Currency?[..2]}"))</MudText>
                                                     }
                                                     else
                                                     {
                                                         <span>--</span>
                                                     }
                                                 </MudTd>
-                                                <MudTd>@(asset.CurrentPrice.HasValue ? (asset.CurrentPrice.Value * asset.Shares).ToString("C2") : (asset.Price * asset.Shares).ToString("C2"))</MudTd>
+                                                <MudTd>
+                                                    @{
+                                                        var assetValue = asset.CurrentPrice.HasValue ? (asset.CurrentPrice.Value * asset.Shares) : (asset.Price * asset.Shares);
+                                                        @assetValue.ToString("C", CultureInfo.GetCultureInfo($"en-{asset.Currency?[..2]}"))
+                                                    }
+                                                </MudTd>
                                                 <MudTd>
                                                     <MudIconButton Icon="@Icons.Material.Filled.Sell"
                                                                    Size="Size.Small"

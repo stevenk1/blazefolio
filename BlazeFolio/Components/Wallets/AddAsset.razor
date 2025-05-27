@@ -36,7 +36,8 @@
                                                       RequiredError="Price is required"
                                                       Min="0.01M"
                                                       Format="N2"
-                                                      AdornmentIcon="@Icons.Material.Filled.AttachMoney"
+                                                      AdornmentIcon="@(!string.IsNullOrEmpty(_currency) ? null : Icons.Material.Filled.AttachMoney)"
+                                                      AdornmentText="@(!string.IsNullOrEmpty(_currency) ? _currency : null)"
                                                       Adornment="Adornment.Start"
                                                       Variant="Variant.Outlined"
                                                       Disabled="@_loadingPrice"
@@ -87,6 +88,7 @@
     private DateTime? _purchaseDate = DateTime.Today;
     private decimal _price;
     private int _quantity = 1;
+    private string? _currency;
 
     protected override async Task OnInitializedAsync()
     {
@@ -117,6 +119,9 @@
             {
                 _price = price.Value;
             }
+
+            // Also fetch metadata to get currency information
+            await FetchMetadataAsync();
         }
         catch (Exception ex)
         {
@@ -126,6 +131,27 @@
         {
             _loadingPrice = false;
             StateHasChanged(); // Update UI after loading completes
+        }
+    }
+
+    private async Task FetchMetadataAsync()
+    {
+        if (string.IsNullOrEmpty(Symbol))
+            return;
+
+        try
+        {
+            // Get metadata for the symbol to retrieve currency information
+            var metadataResult = await Mediator.Send(new BlazeFolio.Application.Wallets.Features.Queries.GetSymbolMetadata(new List<string> { Symbol }));
+
+            if (metadataResult.IsSuccess && metadataResult.Value.TryGetValue(Symbol, out var metadata) && metadata != null)
+            {
+                _currency = metadata.Currency;
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleException(ex, "Error fetching symbol metadata", "AddAsset.FetchMetadataAsync");
         }
     }
     
@@ -153,8 +179,9 @@
 
             if (result.IsSuccess)
             {
-                Snackbar.Add($"Recorded purchase of {_quantity} {Symbol} at ${_price:N2}", Severity.Success);
-                _dialog.Close(new Asset(Symbol, _purchaseDate.Value, _price, _quantity));
+                string priceDisplay = !string.IsNullOrEmpty(_currency) ? $"{_currency}{_price:N2}" : $"${_price:N2}";
+                Snackbar.Add($"Recorded purchase of {_quantity} {Symbol} at {priceDisplay}", Severity.Success);
+                _dialog.Close(new Asset(Symbol, _purchaseDate.Value, _price, _quantity, _currency));
             }
             else
             {
@@ -172,5 +199,5 @@
         }
     }
     
-    public record Asset(string Symbol, DateTime PurchaseDate, decimal Price, int Quantity);
+    public record Asset(string Symbol, DateTime PurchaseDate, decimal Price, int Quantity, string? Currency);
 }
