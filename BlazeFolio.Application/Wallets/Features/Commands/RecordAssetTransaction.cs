@@ -1,4 +1,5 @@
 using BlazeFolio.Application.Contracts.Persistence.Repositories;
+using BlazeFolio.Domain.Providers;
 using BlazeFolio.Domain.WalletAggregate;
 using BlazeFolio.Domain.WalletAggregate.Entities;
 using BlazeFolio.Domain.WalletAggregate.ValueObjects;
@@ -17,10 +18,12 @@ public record RecordAssetTransaction(
 public class RecordAssetTransactionHandler : IRequestHandler<RecordAssetTransaction, Result>
 {
     private readonly IWalletRepository _walletRepository;
+    private readonly IMarketMetadataProvider _metadataProvider;
 
-    public RecordAssetTransactionHandler(IWalletRepository walletRepository)
+    public RecordAssetTransactionHandler(IWalletRepository walletRepository, IMarketMetadataProvider metadataProvider)
     {
         _walletRepository = walletRepository;
+        _metadataProvider = metadataProvider;
     }
 
     public async Task<Result> Handle(RecordAssetTransaction request, CancellationToken cancellationToken)
@@ -32,8 +35,16 @@ public class RecordAssetTransactionHandler : IRequestHandler<RecordAssetTransact
             return Result.Failure($"Wallet with id: {request.WalletId} not found.");
         }
 
-        var asset = Asset.Create(request.Symbol, request.PurchaseDate, request.Quantity, request.Price);
+        var asset = Asset.Create(request.Symbol, request.PurchaseDate, request.Quantity, request.Price,string.Empty,string.Empty);
         wallet.AddAsset(asset);
+
+        // Fetch metadata for the asset and store it
+        var metadata = await _metadataProvider.GetMetadataAsync(request.Symbol);
+        if (metadata != null)
+        {
+            // Update asset with metadata
+            asset.UpdateMetadata(metadata);
+        }
 
         await _walletRepository.UpdateAsync(wallet);
 

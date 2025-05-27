@@ -13,6 +13,10 @@ public class AssetModel
     public decimal Price { get; set; }
     public DateTime PurchaseDate { get; set; }
     
+    public string? QuoteType { get; set; }
+
+    public string? LongName { get; set; }
+    
     // Parameterless constructor required by LiteDB
     public AssetModel()
     {
@@ -27,10 +31,13 @@ public class AssetModel
             Symbol = asset.Symbol,
             Quantity = asset.Quantity,
             Price = asset.Price,
-            PurchaseDate = asset.PurchaseDate
+            PurchaseDate = asset.PurchaseDate,
+            LongName = asset.LongName,
+            QuoteType= asset.QuoteType,
+            
         };
     }
-    
+
     // Convert to domain entity
     public Asset ToDomain()
     {
@@ -38,7 +45,9 @@ public class AssetModel
             Symbol,
             PurchaseDate,
             Quantity,
-            Price
+            Price,
+            LongName,
+            QuoteType
         );
     }
 }

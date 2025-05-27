@@ -19,5 +19,6 @@ public static class DependencyInjection
 
         // Register market price providers
         services.AddTransient<IMarketPriceProvider, YahooFinanceMarketPriceProvider>();
+        services.AddTransient<IMarketMetadataProvider, YahooFinanceMarketMetadataProvider>();
     }
 }
