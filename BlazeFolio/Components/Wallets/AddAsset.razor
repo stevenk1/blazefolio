@@ -15,7 +15,9 @@
                           RequiredError="Symbol is required"
                           Placeholder="e.g., AAPL, MSFT, TSLA"
                           Variant="Variant.Outlined"
+                          ReadOnly="@(!string.IsNullOrEmpty(Symbol))"
                           FullWidth
+                          OnBlur="FetchCurrentPriceAsync"
                           Class="mb-4" />
                           
                                       <MudText Typo="Typo.subtitle1" Class="mb-1">Purchase Date</MudText>
@@ -27,17 +29,24 @@
                                       <MudGrid>
                                           <MudItem xs="6">
                                               <MudText Typo="Typo.subtitle1" Class="mb-1">Price</MudText>
-                                              <MudNumericField T="decimal"
-                                    @bind-Value="_price" 
-                                    Required="true"
-                                    RequiredError="Price is required"
-                                    Min="0.01M"
-                                    Format="N2"
-                                    AdornmentIcon="@Icons.Material.Filled.AttachMoney"
-                                    Adornment="Adornment.Start"
-                                    Variant="Variant.Outlined"
-                                    FullWidth
-                                    Class="mb-4" />
+                                              <div class="d-flex">
+                                                  <MudNumericField T="decimal"
+                                                      @bind-Value="_price" 
+                                                      Required="true"
+                                                      RequiredError="Price is required"
+                                                      Min="0.01M"
+                                                      Format="N2"
+                                                      AdornmentIcon="@Icons.Material.Filled.AttachMoney"
+                                                      Adornment="Adornment.Start"
+                                                      Variant="Variant.Outlined"
+                                                      Disabled="@_loadingPrice"
+                                                      FullWidth
+                                                      Class="mb-4" />
+                                                  @if (_loadingPrice)
+                                                  {
+                                                      <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="ml-2 mt-2" />
+                                                  }
+                                              </div>
                                           </MudItem>
                                           <MudItem xs="6">
                                               <MudText Typo="Typo.subtitle1" Class="mb-1">Quantity</MudText>
@@ -68,20 +77,56 @@
 @code {
     [Parameter] public Guid WalletId { get; set; }
     [Parameter] public string WalletName { get; set; } = string.Empty;
+    [Parameter] public string Symbol { get; set; } = string.Empty;
 
     private SharedDialog _dialog = null!;
     private MudForm _form = null!;
     private bool _isValid;
     private bool _processing;
-    public string Symbol = string.Empty;
+    private bool _loadingPrice;
     private DateTime? _purchaseDate = DateTime.Today;
     private decimal _price;
     private int _quantity = 1;
-    
-    protected override void OnInitialized()
+
+    protected override async Task OnInitializedAsync()
     {
         // Ensure purchase date is set to today
         _purchaseDate = DateTime.Today;
+
+        // If symbol is provided, load the current price
+        if (!string.IsNullOrEmpty(Symbol))
+        {
+            await FetchCurrentPriceAsync();
+        }
+    }
+
+    private async Task FetchCurrentPriceAsync()
+    {
+        if (string.IsNullOrEmpty(Symbol))
+            return;
+
+        _loadingPrice = true;
+        StateHasChanged(); // Update UI to show loading indicator
+
+        try
+        {
+            // Get current market price for the symbol
+            var result = await Mediator.Send(new BlazeFolio.Application.Wallets.Features.Queries.GetCurrentMarketPrices(new List<string> { Symbol }));
+
+            if (result.IsSuccess && result.Value.TryGetValue(Symbol, out var price) && price.HasValue)
+            {
+                _price = price.Value;
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleException(ex, "Error fetching current price", "AddAsset.FetchCurrentPriceAsync");
+        }
+        finally
+        {
+            _loadingPrice = false;
+            StateHasChanged(); // Update UI after loading completes
+        }
     }
     
     private void Cancel()
