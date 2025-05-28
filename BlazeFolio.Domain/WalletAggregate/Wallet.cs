@@ -26,4 +26,9 @@ public class Wallet(WalletId id, string name, Picture picture, WalletType type =
     {
         _assets.Add(asset);
     }
+
+    public void RemoveAsset(Asset asset)
+    {
+        _assets.Remove(asset);
+    }
 }

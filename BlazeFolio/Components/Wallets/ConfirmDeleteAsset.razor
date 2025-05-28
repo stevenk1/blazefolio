@@ -1,0 +1,61 @@
+@page "/dialog/confirm-delete-asset"
+
+@using MediatR
+@using BlazeFolio.Application.Wallets.Features.Commands
+@using BlazeFolio.Services
+@inject IMediator Mediator
+@inject NavigationManager NavigationManager
+
+<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.h6">Delete Asset Purchase</MudText>
+        <MudText Class="mt-2">Are you sure you want to delete this purchase?</MudText>
+        
+        <MudCard Class="mt-4">
+            <MudCardContent>
+                <MudGrid>
+                    <MudItem xs="12">
+                        <MudText><strong>Symbol:</strong> @AssetSymbol</MudText>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudText><strong>Purchase Date:</strong> @PurchaseDate.ToString("MM/dd/yyyy")</MudText>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudText><strong>Shares:</strong> @Shares</MudText>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudText><strong>Price:</strong> @Price.ToString("C")</MudText>
+                    </MudItem>
+                </MudGrid>
+            </MudCardContent>
+        </MudCard>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="@Cancel" Color="Color.Primary" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton OnClick="@Confirm" Color="Color.Error">Delete</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public string AssetSymbol { get; set; } = string.Empty;
+    [Parameter] public DateTime PurchaseDate { get; set; }
+    [Parameter] public int Shares { get; set; }
+    [Parameter] public decimal Price { get; set; }
+    [Parameter] public Guid WalletId { get; set; }
+
+    private async Task Confirm()
+    {
+        var result = await Mediator.Send(new DeleteAssetTransaction(
+            Domain.WalletAggregate.ValueObjects.WalletId.Create(WalletId),
+            AssetSymbol));
+
+        MudDialog.Close(result.IsSuccess ? DialogResult.Ok(true) : DialogResult.Cancel());
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+}

@@ -159,6 +159,10 @@ else
                                                     <MudIconButton Icon="@Icons.Material.Filled.Sell"
                                                                    Size="Size.Small"
                                                                    OnClick="@(() => OpenSellAssetDialog(asset))"/>
+                                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                                   Size="Size.Small"
+                                                                   Color="Color.Error"
+                                                                   OnClick="@(() => OpenDeleteAssetDialog(asset))"/>
                                                 </MudTd>
                                             </RowTemplate>
                                         </MudTable>
@@ -277,6 +281,28 @@ else
         if (result is { Canceled: false, Data: AddAsset.Asset asset })
         {
             Snackbar.Add($"Added {asset.Symbol} purchase to {wallet.Name}", Severity.Success);
+            await LoadWalletAsync();
+        }
+    }
+
+    private async Task OpenDeleteAssetDialog(AssetModel asset)
+    {
+        var parameters = new DialogParameters
+        {
+            { "AssetSymbol", asset.Symbol },
+            { "PurchaseDate", asset.PurchaseDate },
+            { "Shares", asset.Shares },
+            { "Price", asset.Price },
+            { "WalletId", WalletId }
+        };
+
+        var options = new DialogOptions { CloseOnEscapeKey = true, CloseButton = true };
+        var dialog = await DialogService.ShowAsync<ConfirmDeleteAsset>($"Delete {asset.Symbol} Purchase", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            Snackbar.Add($"Deleted {asset.Shares} shares of {asset.Symbol}", Severity.Success);
             await LoadWalletAsync();
         }
     }
