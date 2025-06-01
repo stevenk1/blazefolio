@@ -1,5 +1,6 @@
 using System;
 using BlazeFolio.Domain.WalletAggregate.Entities;
+using BlazeFolio.Domain.WalletAggregate.ValueObjects;
 using LiteDB;
 
 namespace BlazeFolio.Infrastructure.Persistence.Models;

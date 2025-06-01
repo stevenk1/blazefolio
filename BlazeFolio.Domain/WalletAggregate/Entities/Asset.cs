@@ -1,5 +1,6 @@
 using BlazeFolio.Domain.Common;
 using BlazeFolio.Domain.Models;
+using BlazeFolio.Domain.WalletAggregate.ValueObjects;
 
 namespace BlazeFolio.Domain.WalletAggregate.Entities;
 

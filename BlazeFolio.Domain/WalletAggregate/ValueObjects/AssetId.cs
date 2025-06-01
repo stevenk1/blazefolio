@@ -1,6 +1,6 @@
 using BlazeFolio.Domain.Common;
 
-namespace BlazeFolio.Domain.WalletAggregate.Entities;
+namespace BlazeFolio.Domain.WalletAggregate.ValueObjects;
 
 public sealed class AssetId : ValueObject
 {

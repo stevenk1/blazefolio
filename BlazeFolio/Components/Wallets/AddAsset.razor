@@ -170,7 +170,7 @@
         try
         {
             var walletId = Domain.WalletAggregate.ValueObjects.WalletId.Create(WalletId);
-            var result = await Mediator.Send(new BlazeFolio.Application.Wallets.Features.Commands.RecordAssetTransaction(
+            var result = await Mediator.Send(new BlazeFolio.Application.Wallets.Features.Commands.BuyAsset(
                 walletId, 
                 Symbol, 
                 _purchaseDate.Value, 

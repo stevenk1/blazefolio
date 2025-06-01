@@ -1,5 +1,6 @@
 using BlazeFolio.Domain.Common;
 using BlazeFolio.Domain.WalletAggregate.Entities;
+using BlazeFolio.Domain.WalletAggregate.Exceptions;
 using BlazeFolio.Domain.WalletAggregate.ValueObjects;
 
 namespace BlazeFolio.Domain.WalletAggregate;
@@ -42,5 +43,40 @@ public class Wallet : AggregateRoot<WalletId>
     public void RemoveAsset(Asset asset)
     {
         _assets.Remove(asset);
+    }
+
+    public void SellAsset(AssetId assetId, int quantity, DateTime saleDate, decimal price)
+    {
+        // Find the asset to sell
+        var asset = _assets.FirstOrDefault(a => a.Id == assetId);
+        if (asset == null)
+        {
+            throw new AssetNotFoundException(assetId);
+        }
+
+        // Validate quantity
+        if (asset.Quantity < quantity)
+        {
+            throw new InsufficientSharesException(assetId, quantity, asset.Quantity);
+        }
+
+        // Remove asset from wallet
+        _assets.Remove(asset);
+
+        // If not selling all shares, create a new asset with remaining shares
+        if (asset.Quantity > quantity)
+        {
+            var remainingAsset = Asset.Create(
+                asset.Symbol,
+                asset.PurchaseDate,
+                asset.Quantity - quantity,
+                asset.Price,
+                asset.LongName,
+                asset.QuoteType,
+                asset.Currency);
+
+            _assets.Add(remainingAsset);
+        }
+
     }
 }

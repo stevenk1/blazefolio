@@ -8,8 +8,6 @@
 <SharedDialog @ref="_dialog" Class="sell-asset-dialog">
     <ChildContent>
         <MudForm @ref="_form" @bind-IsValid="@_isValid">
-            <MudText Typo="Typo.h6" Class="mb-3">Sell @Symbol</MudText>
-
             <MudText Typo="Typo.subtitle1" Class="mb-1">Shares to Sell</MudText>
             <MudNumericField T="int"
                              @bind-Value="_quantity"
@@ -106,56 +104,33 @@
             return;
 
         _processing = true;
-
+        
         try
         {
-            var walletId = Domain.WalletAggregate.ValueObjects.WalletId.Create(WalletId);
+            var command = new BlazeFolio.Application.Wallets.Features.Commands.SellAsset(
+                WalletId: Domain.WalletAggregate.ValueObjects.WalletId.Create(WalletId),
+                AssetId: Domain.WalletAggregate.ValueObjects.AssetId.Create(AssetId),
+                SaleDate: _saleDate.Value,
+                Price: _price,
+                Quantity: _quantity);
 
-            // First, find the asset by ID and remove it from the wallet
-            var getWalletResult = await Mediator.Send(new BlazeFolio.Application.Wallets.Features.Queries.GetWalletById(walletId));
+            var result = await Mediator.Send(command);
 
-            if (!getWalletResult.IsSuccess)
+            if (result.IsSuccess)
             {
-                Snackbar.Add($"Error finding wallet: {getWalletResult.Error}", Severity.Error);
-                return;
+                Snackbar.Add($"Successfully sold {_quantity} shares of {Symbol}", Severity.Success);
+                var saleResult = new SaleResult(Symbol, _saleDate.Value, _price, _quantity);
+                _dialog.Close(saleResult);
             }
-
-
-            // Validate quantity against total holdings of this symbol
-            var totalQuantityOfSymbol = getWalletResult.Value.Assets
-                .Where(a => a.Symbol == Symbol)
-                .Sum(a => a.Quantity);
-
-            if (_quantity > totalQuantityOfSymbol)
+            else
             {
-                Snackbar.Add("Cannot sell more shares than the total owned across all purchases", Severity.Error);
-                return;
+                Snackbar.Add($"Failed to sell asset: {result.Error}", Severity.Error);
+                _dialog.Cancel();
             }
-
-            var sellCommand = new BlazeFolio.Application.Wallets.Features.Commands.RecordAssetTransaction(
-                walletId,
-                Symbol,
-                _saleDate.Value,
-                _price,
-                _quantity * -1);
-
-            var sellResult = await Mediator.Send(sellCommand);
-
-            if (!sellResult.IsSuccess)
-            {
-                Snackbar.Add($"Error selling shares: {sellResult.Error}", Severity.Error);
-                return;
-            }
-
-
-            // Record the sale details (this could be in a separate table/history in a future update)
-            Snackbar.Add($"Successfully sold {_quantity} shares of {Symbol} for {(_price * _quantity):C2}", Severity.Success);
-            _dialog.Close(new SaleResult(Symbol, _saleDate.Value, _price, _quantity));
         }
         catch (Exception ex)
         {
-            ErrorHandler.HandleException(ex, "Error recording asset sale", "SellAsset.SubmitSale");
-            Snackbar.Add("Failed to record asset sale", Severity.Error);
+            ErrorHandler.HandleException(ex);
         }
         finally
         {
