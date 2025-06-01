@@ -37,20 +37,15 @@
     {
         try
         {
-
             var command = new DeleteWalletCommand(Domain.WalletAggregate.ValueObjects.WalletId.Create(WalletId));
             var result = await Mediator.Send(command);
 
-            if (result.IsSuccess)
-            {
-                Snackbar.Add($"Wallet '{WalletName}' was deleted successfully", Severity.Success);
-                _dialog.Close(true);
-            }
-            else
-            {
-                Snackbar.Add($"Failed to delete wallet: {result.Error}", Severity.Error);
-            }
-
+            result.HandleResult(
+                Snackbar, 
+                $"Wallet '{WalletName}' was deleted successfully", 
+                "Failed to delete wallet",
+                () => _dialog.Close(true)
+            );
         }
         catch (Exception ex)
         {

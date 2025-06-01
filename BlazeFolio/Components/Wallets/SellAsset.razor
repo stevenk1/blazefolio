@@ -116,17 +116,15 @@
 
             var result = await Mediator.Send(command);
 
-            if (result.IsSuccess)
-            {
-                Snackbar.Add($"Successfully sold {_quantity} shares of {Symbol}", Severity.Success);
-                var saleResult = new SaleResult(Symbol, _saleDate.Value, _price, _quantity);
-                _dialog.Close(saleResult);
-            }
-            else
-            {
-                Snackbar.Add($"Failed to sell asset: {result.Error}", Severity.Error);
-                _dialog.Cancel();
-            }
+            var successMessage = $"Successfully sold {_quantity} shares of {Symbol}";
+            var saleResult = new SaleResult(Symbol, _saleDate.Value, _price, _quantity);
+
+            result.HandleResult(
+                Snackbar, 
+                successMessage, 
+                () => _dialog.Close(saleResult),
+                () => _dialog.Cancel()
+            );
         }
         catch (Exception ex)
         {

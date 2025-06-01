@@ -1,6 +1,7 @@
 @using MediatR
 @using BlazeFolio.Services
 @using BlazeFolio.Components.Shared
+@using static BlazeFolio.Services.ResultExtensions
 @inject IMediator Mediator
 @inject ErrorHandler ErrorHandler
 @inject ISnackbar Snackbar
@@ -177,21 +178,16 @@
                 _price,
                 _quantity));
 
-            if (result.IsSuccess)
-            {
-                var priceDisplay = !string.IsNullOrEmpty(_currency) ? $"{_currency}{_price:N2}" : $"${_price:N2}";
-                Snackbar.Add($"Recorded purchase of {_quantity} {Symbol} at {priceDisplay}", Severity.Success);
+            var priceDisplay = !string.IsNullOrEmpty(_currency) ? $"{_currency}{_price:N2}" : $"${_price:N2}";
+            var successMessage = $"Recorded purchase of {_quantity} {Symbol} at {priceDisplay}";
+
+            result.HandleResult(Snackbar, successMessage, () => {
                 _dialog.Close(new Asset(Symbol, _purchaseDate.Value, _price, _quantity, _currency));
-            }
-            else
-            {
-                Snackbar.Add($"Failed to record purchase: {result.Error}", Severity.Error);
-            }
+            });
         }
         catch (Exception ex)
         {
             ErrorHandler.HandleException(ex, "Error recording asset purchase", "AddAsset.SubmitPurchase");
-            Snackbar.Add("Failed to record asset purchase", Severity.Error);
         }
         finally
         {

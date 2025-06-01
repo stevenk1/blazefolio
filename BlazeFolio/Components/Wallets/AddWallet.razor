@@ -58,15 +58,9 @@
             
             var result = await Mediator.Send(command);
             
-            if (result.IsSuccess)
-            {
-                Snackbar.Add("Wallet added successfully", MudBlazor.Severity.Success);
-                _dialog.Close(result.Value);
-            }
-            else
-            {
-                Snackbar.Add(result.Error, MudBlazor.Severity.Error);
-            }
+            result.HandleResult(Snackbar, "Wallet added successfully", walletId => {
+                _dialog.Close(walletId);
+            });
         }
         catch (Exception ex)
         {

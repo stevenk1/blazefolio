@@ -62,16 +62,12 @@
                 Domain.WalletAggregate.ValueObjects.WalletId.Create(WalletId),
                 Domain.WalletAggregate.ValueObjects.AssetId.Create(AssetId)));
 
-            if (result.IsSuccess)
-            {
-                Snackbar.Add($"Asset {AssetSymbol} deleted successfully", Severity.Success);
-                _dialog.Close(true);
-            }
-            else
-            {
-                Snackbar.Add($"Failed to delete asset: {result.Error}", Severity.Error);
-                _dialog.Cancel();
-            }
+            result.HandleResult(
+                Snackbar, 
+                "Asset deleted successfully", 
+                () => _dialog.Close(true),
+                () => _dialog.Cancel()
+            );
         }
         catch (Exception ex)
         {
