@@ -43,7 +43,8 @@ public class AssetModel
     // Convert to domain entity
     public Asset ToDomain()
     {
-        return Asset.Create(
+        return Asset.FromPersistence(
+              AssetId.Create(Id),
             Symbol,
             PurchaseDate,
             Quantity,

@@ -4,22 +4,34 @@ using BlazeFolio.Domain.WalletAggregate.ValueObjects;
 
 namespace BlazeFolio.Domain.WalletAggregate;
 
-public class Wallet(WalletId id, string name, Picture picture, WalletType type = WalletType.StockExchange) : AggregateRoot<WalletId>(id)
+public class Wallet : AggregateRoot<WalletId>
 {
-    public string Name { get; private set; } = name;
-    public Picture Picture { get; private set; } = picture;
-    public WalletType Type { get; private set; } = type;
+    private Wallet(WalletId id, string name, Picture picture, WalletType type) : base(id)
+    {
+        Name = name;
+        Picture = picture;
+        Type = type;
+    }
+
+    public string Name { get; private set; }
+    public Picture Picture { get; private set; }
+    public WalletType Type { get; private set; }
     private readonly List<Asset> _assets = new();
     public IReadOnlyList<Asset> Assets => _assets.AsReadOnly();
 
     public static Wallet CreateNew(string name, byte[] pictureData, WalletType type = WalletType.StockExchange)
     {
-        var wallet= new Wallet(
+        var wallet = new Wallet(
             WalletId.CreateUnique(),
             name,
             Picture.Create(pictureData),
             type);
         return wallet;
+    }
+
+    public static Wallet FromPersistence(WalletId id, string name, Picture picture, WalletType type = WalletType.StockExchange)
+    {
+        return new Wallet(id, name, picture, type);
     }
     
     public void AddAsset(Asset asset)

@@ -1,25 +1,26 @@
 using BlazeFolio.Application.Contracts.Persistence.Repositories;
 using BlazeFolio.Domain.WalletAggregate;
+using BlazeFolio.Domain.WalletAggregate.Entities;
 using BlazeFolio.Domain.WalletAggregate.ValueObjects;
 using CSharpFunctionalExtensions;
 using MediatR;
 
 namespace BlazeFolio.Application.Wallets.Features.Commands;
 
-public record DeleteAssetTransaction(
+public record DeleteAsset(
     WalletId WalletId,
-    string Symbol) : IRequest<Result>;
+    AssetId AssetId) : IRequest<Result>;
 
-public class DeleteAssetTransactionHandler : IRequestHandler<DeleteAssetTransaction, Result>
+public class DeleteAssetHandler : IRequestHandler<DeleteAsset, Result>
 {
     private readonly IWalletRepository _walletRepository;
 
-    public DeleteAssetTransactionHandler(IWalletRepository walletRepository)
+    public DeleteAssetHandler(IWalletRepository walletRepository)
     {
         _walletRepository = walletRepository;
     }
 
-    public async Task<Result> Handle(DeleteAssetTransaction request, CancellationToken cancellationToken)
+    public async Task<Result> Handle(DeleteAsset request, CancellationToken cancellationToken)
     {
         var wallet = await _walletRepository.GetByIdAsync(request.WalletId);
 
@@ -28,11 +29,11 @@ public class DeleteAssetTransactionHandler : IRequestHandler<DeleteAssetTransact
             return Result.Failure($"Wallet with id: {request.WalletId} not found.");
         }
 
-        var asset = wallet.Assets.FirstOrDefault(a => a.Symbol == request.Symbol);
+        var asset = wallet.Assets.FirstOrDefault(a => a.Id == request.AssetId);
 
         if (asset is null)
         {
-            return Result.Failure($"Asset with symbol: {request.Symbol} not found in wallet.");
+            return Result.Failure($"Asset with id: {request.AssetId} not found in wallet.");
         }
 
         wallet.RemoveAsset(asset);

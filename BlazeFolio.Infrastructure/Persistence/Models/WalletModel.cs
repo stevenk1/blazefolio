@@ -2,15 +2,14 @@ using BlazeFolio.Domain.WalletAggregate;
 using LiteDB;
 
 namespace BlazeFolio.Infrastructure.Persistence.Models;
+
 using Domain.WalletAggregate.ValueObjects;
 
 public class WalletModel
 {
-    [BsonId]
-
-    public Guid Id { get; set; }
+    [BsonId] public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
-    public byte[] Picture{ get; set; } = [];
+    public byte[] Picture { get; set; } = [];
     public WalletType Type { get; set; } = WalletType.StockExchange;
     public List<AssetModel> Assets { get; set; } = new();
 
@@ -35,18 +34,14 @@ public class WalletModel
     // Convert to domain entity
     public Wallet ToDomain()
     {
-        var wallet = new Wallet(
-            WalletId.Create(Id),
-            Name,
-            Domain.WalletAggregate.ValueObjects.Picture.Create(Picture),
-            Type
-        );
+        var wallet = Wallet.FromPersistence(WalletId.Create(Id), Name,
+            Domain.WalletAggregate.ValueObjects.Picture.Create(Picture), Type);
         
         foreach (var asset in Assets)
         {
             wallet.AddAsset(asset.ToDomain());
         }
-        
+
         return wallet;
     }
 }

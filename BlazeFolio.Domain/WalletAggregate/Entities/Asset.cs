@@ -65,4 +65,17 @@ public class Asset : Entity<AssetId>
             currency);
         
     }
+
+    public static Asset FromPersistence(AssetId id, string symbol, DateTime purchaseDate, int quantity, decimal price, string? longName = null, string? quoteType = null, string? currency = null)
+    {
+        return new Asset(
+            id,
+            symbol,
+            purchaseDate,
+            quantity,
+            price,
+            longName,
+            quoteType,
+            currency);
+    }
 }

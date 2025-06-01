@@ -3,14 +3,16 @@
 @using MediatR
 @using BlazeFolio.Application.Wallets.Features.Commands
 @using BlazeFolio.Services
+@using BlazeFolio.Components.Shared
 @inject IMediator Mediator
-@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@inject ErrorHandler ErrorHandler
 
-<MudDialog>
-    <DialogContent>
+<SharedDialog @ref="_dialog" Class="confirm-delete-asset-dialog">
+    <ChildContent>
         <MudText Typo="Typo.h6">Delete Asset Purchase</MudText>
         <MudText Class="mt-2">Are you sure you want to delete this purchase?</MudText>
-        
+
         <MudCard Class="mt-4">
             <MudCardContent>
                 <MudGrid>
@@ -29,33 +31,63 @@
                 </MudGrid>
             </MudCardContent>
         </MudCard>
-    </DialogContent>
-
-    <DialogActions>
-        <MudButton OnClick="@Cancel" Color="Color.Primary" Variant="Variant.Text">Cancel</MudButton>
-        <MudButton OnClick="@Confirm" Color="Color.Error">Delete</MudButton>
-    </DialogActions>
-</MudDialog>
+    </ChildContent>
+    <ActionContent>
+        <div class="d-flex justify-space-between">
+            <MudButton OnClick="@Cancel" Color="Color.Primary" Variant="Variant.Text">Cancel</MudButton>
+            <MudButton OnClick="@Confirm" Color="Color.Error" Variant="Variant.Filled">Delete</MudButton>
+        </div>
+    </ActionContent>
+</SharedDialog>
 
 @code {
-    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
     [Parameter] public string AssetSymbol { get; set; } = string.Empty;
     [Parameter] public DateTime PurchaseDate { get; set; }
     [Parameter] public int Shares { get; set; }
     [Parameter] public decimal Price { get; set; }
     [Parameter] public Guid WalletId { get; set; }
+    [Parameter] public Guid AssetId { get; set; }
+
+    private SharedDialog _dialog = null!;
+    private bool _processing;
 
     private async Task Confirm()
     {
-        var result = await Mediator.Send(new DeleteAssetTransaction(
-            Domain.WalletAggregate.ValueObjects.WalletId.Create(WalletId),
-            AssetSymbol));
+        if (_processing) return;
 
-        MudDialog.Close(result.IsSuccess ? DialogResult.Ok(true) : DialogResult.Cancel());
+        _processing = true;
+
+        try
+        {
+            var result = await Mediator.Send(new DeleteAsset(
+                Domain.WalletAggregate.ValueObjects.WalletId.Create(WalletId),
+                Domain.WalletAggregate.Entities.AssetId.Create(AssetId)));
+
+            if (result.IsSuccess)
+            {
+                Snackbar.Add($"Asset {AssetSymbol} deleted successfully", Severity.Success);
+                _dialog.Close(true);
+            }
+            else
+            {
+                Snackbar.Add($"Failed to delete asset: {result.Error}", Severity.Error);
+                _dialog.Cancel();
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleException(ex, "Error deleting asset", "ConfirmDeleteAsset.Confirm");
+            Snackbar.Add("An error occurred while deleting the asset", Severity.Error);
+            _dialog.Cancel();
+        }
+        finally
+        {
+            _processing = false;
+        }
     }
 
     private void Cancel()
     {
-        MudDialog.Cancel();
+        _dialog.Cancel();
     }
 }
