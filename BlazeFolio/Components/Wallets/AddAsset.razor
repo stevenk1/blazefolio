@@ -22,11 +22,17 @@
                           Class="mb-4" />
                           
                                       <MudText Typo="Typo.subtitle1" Class="mb-1">Purchase Date</MudText>
-                                      <MudDatePicker @bind-Date="_purchaseDate"
+                          <MudDatePicker Date="_purchaseDate"
+                          DateChanged="OnDateChanged"
                           Required="true"
                           RequiredError="Date is required"
+                          MaxDate="DateTime.Today"
                           Variant="Variant.Outlined"
                           Class="mb-4" />
+                                      @if (_dateError != null)
+                                      {
+                                          <MudText Color="Color.Error" Class="mb-2">@_dateError</MudText>
+                                      }
                                       <MudGrid>
                                           <MudItem xs="6">
                                               <MudText Typo="Typo.subtitle1" Class="mb-1">Price</MudText>
@@ -87,6 +93,7 @@
     private bool _processing;
     private bool _loadingPrice;
     private DateTime? _purchaseDate = DateTime.Today;
+    private string? _dateError;
     private decimal _price;
     private int _quantity = 1;
     private string? _currency;
@@ -156,6 +163,27 @@
         }
     }
     
+    private void OnDateChanged(DateTime? date)
+    {
+        _purchaseDate = date;
+        ValidatePurchaseDate(date);
+    }
+
+    private void ValidatePurchaseDate(DateTime? date)
+    {
+        if (date.HasValue && date.Value > DateTime.Today)
+        {
+            _dateError = "Purchase date cannot be in the future";
+            _isValid = false;
+        }
+        else
+        {
+            _dateError = null;
+            // Let the form validation determine overall validity
+            _form?.Validate();
+        }
+    }
+
     private void Cancel()
     {
         _dialog.Cancel();
@@ -165,6 +193,14 @@
     {
         if (!_isValid || !_purchaseDate.HasValue || _processing)
             return;
+
+        // Double-check that the purchase date is not in the future
+        if (_purchaseDate.Value > DateTime.Today)
+        {
+            _dateError = "Purchase date cannot be in the future";
+            _isValid = false;
+            return;
+        }
 
         _processing = true;
 
@@ -185,12 +221,15 @@
                 _dialog.Close(new Asset(Symbol, _purchaseDate.Value, _price, _quantity, _currency));
             });
         }
+        catch (Domain.WalletAggregate.Exceptions.FuturePurchaseDateException ex)
+        {
+            _dateError = ex.Message;
+            _isValid = false;
+            _processing = false;
+        }
         catch (Exception ex)
         {
             ErrorHandler.HandleException(ex, "Error recording asset purchase", "AddAsset.SubmitPurchase");
-        }
-        finally
-        {
             _processing = false;
         }
     }

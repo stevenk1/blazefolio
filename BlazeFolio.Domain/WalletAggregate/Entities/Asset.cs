@@ -41,6 +41,8 @@ public class Asset : Entity<AssetId>
 
     public static Asset Create(string symbol, DateTime purchaseDate, int quantity, decimal price)
     {
+        ValidatePurchaseDate(purchaseDate);
+
         return new Asset(
             AssetId.CreateUnique(),
             symbol,
@@ -55,6 +57,8 @@ public class Asset : Entity<AssetId>
     
     public static Asset Create(string symbol, DateTime purchaseDate, int quantity, decimal price,string? longname,string? quoteType,string? currency)
     {
+        ValidatePurchaseDate(purchaseDate);
+
         return new Asset(
             AssetId.CreateUnique(),
             symbol,
@@ -65,6 +69,15 @@ public class Asset : Entity<AssetId>
             quoteType,
             currency);
         
+    }
+
+    private static void ValidatePurchaseDate(DateTime purchaseDate)
+    {
+        // Check if purchase date is in the future
+        if (purchaseDate > DateTime.Today)
+        {
+            throw new Exceptions.FuturePurchaseDateException(purchaseDate, DateTime.Today);
+        }
     }
 
     public static Asset FromPersistence(AssetId id, string symbol, DateTime purchaseDate, int quantity, decimal price, string? longName = null, string? quoteType = null, string? currency = null)
