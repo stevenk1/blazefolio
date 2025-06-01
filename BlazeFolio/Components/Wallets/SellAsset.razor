@@ -11,19 +11,19 @@
             <MudText Typo="Typo.h6" Class="mb-3">Sell @Symbol</MudText>
 
             <MudText Typo="Typo.subtitle1" Class="mb-1">Shares to Sell</MudText>
-            <MudNumericField T="int" 
-                             @bind-Value="_quantity" 
-                             Required="true" 
+            <MudNumericField T="int"
+                             @bind-Value="_quantity"
+                             Required="true"
                              RequiredError="Quantity is required"
                              Min="1"
                              Max="@MaxShares"
                              Variant="Variant.Outlined"
                              FullWidth
-                             Class="mb-4" />
+                             Class="mb-4"/>
 
             <MudText Typo="Typo.subtitle1" Class="mb-1">Sell Price</MudText>
             <MudNumericField T="decimal"
-                             @bind-Value="_price" 
+                             @bind-Value="_price"
                              Required="true"
                              RequiredError="Price is required"
                              Min="0.01M"
@@ -32,7 +32,7 @@
                              Adornment="Adornment.Start"
                              Variant="Variant.Outlined"
                              FullWidth
-                             Class="mb-4" />
+                             Class="mb-4"/>
 
             <MudText Typo="Typo.subtitle1" Class="mb-1">Sale Date</MudText>
             <MudDatePicker @bind-Date="_saleDate"
@@ -40,9 +40,9 @@
                            RequiredError="Date is required"
                            Variant="Variant.Outlined"
                            FullWidth
-                           Class="mb-4" />
+                           Class="mb-4"/>
 
-            <MudDivider Class="my-4" />
+            <MudDivider Class="my-4"/>
 
             <MudText Typo="Typo.subtitle1">Sale Summary</MudText>
             <MudPaper Elevation="0" Outlined="true" Class="pa-3 my-2">
@@ -90,7 +90,7 @@
 
     protected override void OnInitialized()
     {
-        // Initialize with current price and max shares
+        // Initialize with the current price and max shares
         _price = CurrentPrice;
         _quantity = MaxShares;
     }
@@ -109,9 +109,47 @@
 
         try
         {
-            // This would be implemented to record a stock sale
-            // For now, we'll just close the dialog with success
-            Snackbar.Add($"Sale functionality will be implemented in a future update", Severity.Info);
+            var walletId = Domain.WalletAggregate.ValueObjects.WalletId.Create(WalletId);
+
+            // First, find the asset by ID and remove it from the wallet
+            var getWalletResult = await Mediator.Send(new BlazeFolio.Application.Wallets.Features.Queries.GetWalletById(walletId));
+
+            if (!getWalletResult.IsSuccess)
+            {
+                Snackbar.Add($"Error finding wallet: {getWalletResult.Error}", Severity.Error);
+                return;
+            }
+
+
+            // Validate quantity against total holdings of this symbol
+            var totalQuantityOfSymbol = getWalletResult.Value.Assets
+                .Where(a => a.Symbol == Symbol)
+                .Sum(a => a.Quantity);
+
+            if (_quantity > totalQuantityOfSymbol)
+            {
+                Snackbar.Add("Cannot sell more shares than the total owned across all purchases", Severity.Error);
+                return;
+            }
+
+            var sellCommand = new BlazeFolio.Application.Wallets.Features.Commands.RecordAssetTransaction(
+                walletId,
+                Symbol,
+                _saleDate.Value,
+                _price,
+                _quantity * -1);
+
+            var sellResult = await Mediator.Send(sellCommand);
+
+            if (!sellResult.IsSuccess)
+            {
+                Snackbar.Add($"Error selling shares: {sellResult.Error}", Severity.Error);
+                return;
+            }
+
+
+            // Record the sale details (this could be in a separate table/history in a future update)
+            Snackbar.Add($"Successfully sold {_quantity} shares of {Symbol} for {(_price * _quantity):C2}", Severity.Success);
             _dialog.Close(new SaleResult(Symbol, _saleDate.Value, _price, _quantity));
         }
         catch (Exception ex)
@@ -126,4 +164,5 @@
     }
 
     public record SaleResult(string Symbol, DateTime SaleDate, decimal Price, int Quantity);
+
 }

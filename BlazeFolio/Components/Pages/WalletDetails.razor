@@ -309,9 +309,25 @@ else
 
     private async Task OpenSellAssetDialog(AssetModel asset)
     {
-        // This would be implemented to show a dialog for selling assets
-        // For now, we'll just show a snackbar message
-        Snackbar.Add($"Sell functionality for {asset.Symbol} will be implemented in a future update", Severity.Info);
+        var parameters = new DialogParameters
+        {
+            { "WalletId", WalletId },
+            { "WalletName", _wallet?.Name },
+            { "AssetId", asset.Id },
+            { "Symbol", asset.Symbol },
+            { "MaxShares", asset.Shares },
+            { "CurrentPrice", asset.CurrentPrice ?? asset.Price }
+        };
+
+        var options = new DialogOptions { CloseOnEscapeKey = true, CloseButton = true };
+        var dialog = await DialogService.ShowAsync<SellAsset>($"Sell {asset.Symbol}", parameters, options);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false, Data: SellAsset.SaleResult sale })
+        {
+            Snackbar.Add($"Sold {sale.Quantity} shares of {sale.Symbol}", Severity.Success);
+            await LoadWalletAsync();
+        }
     }
 
     private async Task LoadCurrentPricesAsync()
