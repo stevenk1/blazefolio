@@ -4,6 +4,7 @@
 @using BlazeFolio.Services
 @using System.Linq
 @using BlazeFolio.Components.Wallets
+@using System.Globalization
 @inject IMediator Mediator
 @inject ErrorHandler ErrorHandler
 @inject IDialogService DialogService
@@ -63,6 +64,9 @@
                     Name = wallet.Name,
                     Balance = 0.00m,
                 }).ToList();
+
+                // Fetch market data for all wallets to calculate profits and market values
+                await LoadWalletMarketDataAsync(_wallets);
             }
         }
         catch (Exception ex)
@@ -122,13 +126,74 @@
         if (!result.Canceled && result.Data is AddAsset.Asset asset)
         {
             Snackbar.Add($"Added {asset.Symbol} purchase to {wallet.Name}", Severity.Success);
-            // You might want to reload wallet data here if needed
-            // await LoadWalletsAsync();
+            // Reload wallets to reflect the new asset and update calculations
+            await LoadWalletsAsync();
         }
     }
-    
+
     private void ViewWalletDetails(WalletsGrid.WalletDisplay wallet)
     {
         NavigationManager.NavigateTo($"/wallet/{wallet.Id}");
+    }
+
+    private async Task LoadWalletMarketDataAsync(List<WalletsGrid.WalletDisplay> wallets)
+    {
+        try
+        {
+            foreach (var wallet in wallets)
+            {
+                var walletId = Domain.WalletAggregate.ValueObjects.WalletId.Create(wallet.Id);
+                var walletResult = await Mediator.Send(new GetWalletById(walletId));
+
+                if (!walletResult.IsSuccess || walletResult.Value == null)
+                    continue;
+
+                var walletData = walletResult.Value;
+
+                // Skip if wallet has no assets
+                if (!walletData.Assets.Any())
+                    continue;
+
+                // Get symbols to fetch current prices
+                var symbols = walletData.Assets.Select(a => a.Symbol).Distinct().ToList();
+                var pricesResult = await Mediator.Send(new GetCurrentMarketPrices(symbols));
+
+                if (!pricesResult.IsSuccess)
+                    continue;
+
+                var prices = pricesResult.Value;
+                decimal totalInvestment = 0;
+                decimal totalMarketValue = 0;
+
+                // Calculate total investment and current market value
+                foreach (var asset in walletData.Assets)
+                {
+                    var investment = asset.Price * asset.Quantity;
+                    totalInvestment += investment;
+
+                    if (prices.TryGetValue(asset.Symbol, out var currentPrice) && currentPrice.HasValue)
+                    {
+                        var marketValue = currentPrice.Value * asset.Quantity;
+                        totalMarketValue += marketValue;
+                    }
+                    else
+                    {
+                        // If no current price, use purchase price
+                        totalMarketValue += investment;
+                    }
+                }
+
+                // Update wallet display with calculated values
+                wallet.Balance = totalInvestment;
+                wallet.MarketValue = totalMarketValue;
+                wallet.Profit = totalMarketValue - totalInvestment;
+                wallet.ProfitPercentage = totalInvestment > 0 ? (wallet.Profit / totalInvestment) * 100 : 0;
+                wallet.AssetCount = walletData.Assets.Count;
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleException(ex, "Error loading wallet market data", "Wallets.LoadWalletMarketDataAsync");
+        }
     }
 }

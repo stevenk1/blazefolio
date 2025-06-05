@@ -37,7 +37,7 @@
                         </MudCardHeader>
                         <MudCardContent>
                             <MudText Typo="Typo.body2" Color="Color.Secondary">
-                                Created: @DateTime.Now.ToString("MMM dd, yyyy") &bull; 0 asset(s)
+                                Created: @DateTime.Now.ToString("MMM dd, yyyy") &bull; @wallet.AssetCount asset(s)
                             </MudText>
 
                             <MudDivider Class="my-2"/>
@@ -46,18 +46,33 @@
                             <MudText Typo="Typo.h6" Class="mb-2">@wallet.Balance.ToString("C2")</MudText>
 
                             <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Market Value</MudText>
-                            <MudText Typo="Typo.h6" Class="mb-2">$0.00</MudText>
+                            <MudText Typo="Typo.h6" Class="mb-2">@wallet.MarketValue.ToString("C2")</MudText>
 
                             <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Profit/Loss</MudText>
-                            <MudText Typo="Typo.h6" Color="Color.Success">
-                                <MudIcon Icon="@Icons.Material.Filled.ShowChart" Class="mr-1"/>
-                                $0.00 (0.00%)
+                            @{
+                                var profitColor = wallet.Profit >= 0 ? Color.Success : Color.Error;
+                                var profitIcon = wallet.Profit >= 0 ? Icons.Material.Filled.TrendingUp : Icons.Material.Filled.TrendingDown;
+                            }
+                            <MudText Typo="Typo.h6" Color="@profitColor">
+                                <MudIcon Icon="@profitIcon" Class="mr-1"/>
+                                @wallet.Profit.ToString("C2") (@(wallet.Profit >= 0 ? "+" : "")@wallet.ProfitPercentage.ToString("0.00")%)
                             </MudText>
-                            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" FullWidth=true
-                                       EndIcon="@Icons.Material.Filled.ArrowForward"
-                                       OnClick="@(() => OnViewDetails.InvokeAsync(wallet))">
-                                View Details
-                            </MudButton>
+                            <MudGrid Spacing="1" Class="mt-2">
+                                <MudItem xs="6">
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth=true
+                                        StartIcon="@Icons.Material.Filled.Add"
+                                        OnClick="@(() => OnBuyStocks.InvokeAsync(wallet))">
+                                        Buy
+                                    </MudButton>
+                                </MudItem>
+                                <MudItem xs="6">
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" FullWidth=true
+                                        EndIcon="@Icons.Material.Filled.ArrowForward"
+                                        OnClick="@(() => OnViewDetails.InvokeAsync(wallet))">
+                                        Details
+                                    </MudButton>
+                                </MudItem>
+                            </MudGrid>
 
                         </MudCardContent>
                     </MudCard>
@@ -91,5 +106,9 @@
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public decimal Balance { get; set; }
+        public decimal MarketValue { get; set; }
+        public decimal Profit { get; set; }
+        public decimal ProfitPercentage { get; set; }
+        public int AssetCount { get; set; }
     }
 }
