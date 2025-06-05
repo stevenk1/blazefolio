@@ -43,7 +43,21 @@ else
                 <MudItem xs="12" Class="d-flex justify-space-between align-center">
                     <div>
                         <MudText Typo="Typo.h4">@_wallet.Name</MudText>
-                        <MudText Typo="Typo.subtitle1" Color="Color.Secondary">Wallet ID: @WalletId</MudText>
+                        @if (_wallet.Assets.Any() && _wallet.Assets.Any(a => a.CurrentPrice.HasValue))
+                        {
+                            var totalValue = _wallet.Assets.Sum(a => a.Price * a.Shares);
+                            var totalCurrentValue = _wallet.Assets.Sum(a => a.CurrentPrice.HasValue ? a.CurrentPrice.Value * a.Shares : 0);
+                            var totalProfit = totalCurrentValue - totalValue;
+                            var profitPercentage = totalValue > 0 ? (totalProfit / totalValue) * 100 : 0;
+                            var profitColor = totalProfit >= 0 ? Color.Success : Color.Error;
+
+                            <MudText Typo="Typo.body1" Class="mb-1">
+                                Total Value: @totalCurrentValue.ToString("C")
+                            </MudText>
+                            <MudText Typo="Typo.body1" Color="@profitColor">
+                                Total Profit: @totalProfit.ToString("C") (@(totalProfit >= 0 ? "+" : "")@profitPercentage.ToString("0.00")%)
+                            </MudText>
+                        }
                     </div>
                     <div>
                         <MudButton Variant="Variant.Filled"

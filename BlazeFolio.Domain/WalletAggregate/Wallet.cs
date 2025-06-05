@@ -60,7 +60,7 @@ public class Wallet : AggregateRoot<WalletId>
             throw new InsufficientSharesException(assetId, quantity, asset.Quantity);
         }
 
-        // Remove asset from wallet
+        // Remove asset from the wallet
         _assets.Remove(asset);
 
         // If not selling all shares, create a new asset with remaining shares
