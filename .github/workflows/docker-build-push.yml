@@ -8,18 +8,20 @@ on:
   workflow_dispatch:
 
 jobs:
+  # Define platforms to build for
   build-and-push:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
+    strategy:
+      matrix:
+        platform: [linux/amd64, linux/arm64]
+      fail-fast: false
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -44,22 +46,44 @@ jobs:
             type=ref,event=pr
             type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
 
-      - name: Build and push Docker image
+              - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,format=short
+            type=ref,event=branch
+            type=ref,event=pr
+            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
+
+              # Generate platform-specific tags
+              - name: Generate platform-specific tag
+        id: platform-tag
+        run: |
+          # Convert linux/amd64 to amd64 for the tag
+          PLATFORM_SUFFIX=$(echo "${{ matrix.platform }}" | cut -d'/' -f2)
+          echo "suffix=$PLATFORM_SUFFIX" >> $GITHUB_OUTPUT
+
+              # Build and push platform-specific image with platform in tag
+              - name: Build and push Docker image for ${{ matrix.platform }}
         uses: docker/build-push-action@v5
         with:
           context: .
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: ghcr.io/${{ github.repository }}:${{ steps.meta.outputs.version }}-${{ steps.platform-tag.outputs.suffix }}
           labels: ${{ steps.meta.outputs.labels }}
-          platforms: linux/amd64,linux/arm64
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          platforms: ${{ matrix.platform }}
+          cache-from: type=gha,scope=${{ matrix.platform }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.platform }}
 
       - name: Upload build context artifacts if build fails
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: docker-build-context
+          name: docker-build-context-${{ matrix.platform }}
           path: |
             Dockerfile
             .dockerignore
@@ -67,3 +91,41 @@ jobs:
             BlazeFolio.Domain/*.csproj
             BlazeFolio.Application/*.csproj
             BlazeFolio.Infrastructure/*.csproj
+
+          # Create and push the multi-arch manifest
+          create-manifest:
+            needs: build-and-push
+            runs-on: ubuntu-latest
+            if: github.event_name != 'pull_request'
+            permissions:
+              packages: write
+
+            steps:
+              - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+              - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,format=short
+            type=ref,event=branch
+            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
+
+              # Create and push the manifest list/index
+              - name: Create and push manifest
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          platforms: linux/amd64,linux/arm64
+          provenance: false
+          outputs: type=image,push-by-manifest=true,push-by-digest=false,name=ghcr.io/${{ github.repository }}
