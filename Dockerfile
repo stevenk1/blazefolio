@@ -2,23 +2,24 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-# Copy csproj files and restore dependencies
-COPY ["BlazeFolio.sln", "."]
-COPY ["BlazeFolio/*.csproj", "BlazeFolio/"]
-COPY ["BlazeFolio.Domain/*.csproj", "BlazeFolio.Domain/"]
-COPY ["BlazeFolio.Application/*.csproj", "BlazeFolio.Application/"]
-COPY ["BlazeFolio.Infrastructure/*.csproj", "BlazeFolio.Infrastructure/"]
+# Copy solution and project files first for better layer caching
+COPY *.sln .
+COPY BlazeFolio/*.csproj BlazeFolio/
+COPY BlazeFolio.Domain/*.csproj BlazeFolio.Domain/
+COPY BlazeFolio.Application/*.csproj BlazeFolio.Application/
+COPY BlazeFolio.Infrastructure/*.csproj BlazeFolio.Infrastructure/
+COPY BlazeFolio.Application.Tests/*.csproj BlazeFolio.Application.Tests/
 
-RUN dotnet restore
+# Restore as distinct layers
+RUN dotnet restore BlazeFolio.sln
 
 # Copy everything else and build
 COPY . .
-WORKDIR "/src/BlazeFolio"
-RUN dotnet build "BlazeFolio.csproj" -c Release -o /app/build
+RUN dotnet build BlazeFolio/BlazeFolio.csproj -c Release -o /app/build
 
 # Publish stage
 FROM build AS publish
-RUN dotnet publish "BlazeFolio.csproj" -c Release -o /app/publish
+RUN dotnet publish BlazeFolio/BlazeFolio.csproj -c Release -o /app/publish
 
 # Final stage
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
