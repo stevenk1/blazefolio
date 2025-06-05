@@ -50,7 +50,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          # Enable buildx detailed output for debugging
+          # Enable buildx detailed output for debugging 
           outputs: type=docker,dest=/tmp/docker-image.tar
 
               - name: Upload Docker image artifact if build fails
