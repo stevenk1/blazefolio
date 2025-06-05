@@ -25,14 +25,18 @@ RUN dotnet publish BlazeFolio/BlazeFolio.csproj -c Release -o /app/publish
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
 WORKDIR /app
 
-# Create directory for database
-RUN mkdir -p /app/Data
+# Create directory for database that will be mounted as a volume
+RUN mkdir -p /data
 
 COPY --from=publish /app/publish .
 
 # Set environment variables
 ENV ASPNETCORE_ENVIRONMENT=Production
 ENV ASPNETCORE_URLS=http://+:80
+# Set the database path to the mounted volume location
+ENV DatabasePath=/data/blazefolio.db
+
+VOLUME ["/data"]
 
 EXPOSE 80
 

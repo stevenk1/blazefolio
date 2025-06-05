@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  blazefolio:
+    image: ghcr.io/${GITHUB_REPOSITORY:-username/blazefolio}:latest
+    ports:
+      - "8080:80"
+    volumes:
+      - blazefolio_data:/data
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - DatabasePath=/data/blazefolio.db
+    restart: unless-stopped
+
+volumes:
+  blazefolio_data:
+    driver: local
