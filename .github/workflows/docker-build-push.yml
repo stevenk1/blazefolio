@@ -16,7 +16,7 @@ jobs:
       packages: write
     strategy:
       matrix:
-        platform: [linux/amd64, linux/arm64]
+        platform: [ linux/amd64, linux/arm64 ]
       fail-fast: false
 
     steps:
@@ -102,30 +102,30 @@ jobs:
 
             steps:
               - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-              - name: Extract Docker metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/${{ github.repository }}
-          tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=sha,format=short
-            type=ref,event=branch
-            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
-
-              # Create and push the manifest list/index
+                uses: docker/login-action@v3
+                with:
+                  registry: ghcr.io
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+        
+                    - name: Extract Docker metadata
+                id: meta
+                uses: docker/metadata-action@v5
+                with:
+                  images: ghcr.io/${{ github.repository }}
+                  tags: |
+                    type=semver,pattern={{version}}
+                    type=semver,pattern={{major}}.{{minor}}
+                    type=sha,format=short
+                    type=ref,event=branch
+                    type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
+        
+                      # Create and push the manifest list/index
               - name: Create and push manifest
-        uses: docker/build-push-action@v5
-        with:
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          platforms: linux/amd64,linux/arm64
-          provenance: false
-          outputs: type=image,push-by-manifest=true,push-by-digest=false,name=ghcr.io/${{ github.repository }}
+                uses: docker/build-push-action@v5
+                with:
+                  push: true
+                  tags: ${{ steps.meta.outputs.tags }}
+                  platforms: linux/amd64,linux/arm64
+                  provenance: false
+                  outputs: type=image,push-by-manifest=true,push-by-digest=false,name=ghcr.io/${{ github.repository }}
