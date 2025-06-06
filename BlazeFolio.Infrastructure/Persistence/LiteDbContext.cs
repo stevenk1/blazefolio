@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using BlazeFolio.Domain.WalletAggregate.ValueObjects;
 using BlazeFolio.Infrastructure.Persistence.Models;
+using BlazeFolio.Infrastructure.StockMarket.Models;
 using LiteDB;
 
 namespace BlazeFolio.Infrastructure.Persistence;
@@ -64,9 +65,12 @@ public class LiteDbContext : IDisposable
     {
         // Ensure collections are created
         var wallets = _database.GetCollection<WalletModel>("wallets");
-        
+        var marketPrices = _database.GetCollection<MarketPriceRecord>("marketPrices");
+
         // Create any necessary indexes
         wallets.EnsureIndex(x => x.Id);
+        marketPrices.EnsureIndex(x => x.Symbol);
+        marketPrices.EnsureIndex(x => x.Timestamp);
     }
 
     private static void RegisterCustomMappings(BsonMapper mapper)
@@ -86,6 +90,7 @@ public class LiteDbContext : IDisposable
 
     // Collection accessors
     public ILiteCollection<WalletModel> Wallets => _database.GetCollection<WalletModel>("wallets");
+    public ILiteCollection<MarketPriceRecord> MarketPrices => _database.GetCollection<MarketPriceRecord>("marketPrices");
 
     public void Dispose()
     {

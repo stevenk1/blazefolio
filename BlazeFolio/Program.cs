@@ -3,6 +3,9 @@ using BlazeFolio.Components;
 using BlazeFolio.Application;
 using BlazeFolio.Infrastructure.Extensions;
 using MudBlazor;
+using BlazeFolio.Hubs;
+using BlazeFolio.Infrastructure.StockMarket.BackgroundServices;
+using BlazeFolio.Infrastructure.StockMarket.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,8 +26,9 @@ builder.Services.AddMudServices(config =>
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
     
-// Register ErrorHandler service
+// Register services
 builder.Services.AddScoped<BlazeFolio.Services.ErrorHandler>();
+builder.Services.AddScoped<BlazeFolio.Services.MarketPriceClient>();
 
 // Add application services
 builder.Services.AddApplication();
@@ -35,6 +39,15 @@ string connectionString = $"Filename={dbPath};Connection=shared";
 
 // Add infrastructure services
 builder.Services.AddInfrastructure(connectionString);
+
+// Register the MarketPriceService
+builder.Services.AddScoped<MarketPriceService>();
+
+// Register the background service
+builder.Services.AddHostedService<MarketPriceBackgroundService>();
+
+// Add SignalR
+builder.Services.AddSignalR();
 
 // Configure logging
 builder.Logging
@@ -56,5 +69,8 @@ app.UseAntiforgery();
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+
+// Map SignalR hub
+app.MapHub<MarketPriceHub>("/marketPriceHub");
 
 app.Run();

@@ -5,11 +5,13 @@
 @using BlazeFolio.Services
 @using System.Linq
 @using BlazeFolio.Components.Wallets
+@implements IAsyncDisposable
 @inject IMediator Mediator
 @inject ErrorHandler ErrorHandler
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject NavigationManager NavigationManager
+@inject MarketPriceClient MarketPriceClient
 
 <PageTitle>Wallet Details</PageTitle>
 
@@ -203,6 +205,10 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        // Initialize the SignalR client
+        await InitializeSignalRAsync();
+
+        // Load wallet data
         await LoadWalletAsync();
     }
 
@@ -370,11 +376,67 @@ else
                         asset.CurrentPrice = price.Value;
                     }
                 }
+
+                // Subscribe to real-time updates for these symbols
+                await SubscribeToSymbolsAsync(uniqueSymbols);
             }
         }
         catch (Exception ex)
         {
             ErrorHandler.HandleException(ex, "Error loading current prices", "WalletDetails.LoadCurrentPricesAsync");
+        }
+    }
+
+    private async Task InitializeSignalRAsync()
+    {
+        try
+        {
+            // Initialize the MarketPriceClient
+            await MarketPriceClient.InitializeAsync();
+
+            // Set up event handler for price updates
+            MarketPriceClient.OnPriceUpdate += HandlePriceUpdate;
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleException(ex, "Error initializing SignalR connection", "WalletDetails.InitializeSignalRAsync");
+        }
+    }
+
+    private async Task SubscribeToSymbolsAsync(List<string> symbols)
+    {
+        if (symbols == null || !symbols.Any())
+            return;
+
+        try
+        {
+            foreach (var symbol in symbols)
+            {
+                await MarketPriceClient.SubscribeToSymbolAsync(symbol);
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorHandler.HandleException(ex, "Error subscribing to market price updates", "WalletDetails.SubscribeToSymbolsAsync");
+        }
+    }
+
+    private void HandlePriceUpdate(string symbol, decimal? price)
+    {
+        if (_wallet == null || !price.HasValue)
+            return;
+
+        // Find all assets with this symbol and update their current prices
+        var assetsToUpdate = _wallet.Assets.Where(a => a.Symbol == symbol).ToList();
+        if (assetsToUpdate.Any())
+        {
+            foreach (var asset in assetsToUpdate)
+            {
+                asset.CurrentPrice = price.Value;
+            }
+
+            // Trigger UI update
+            InvokeAsync(StateHasChanged);
         }
     }
 
@@ -396,6 +458,30 @@ else
         public decimal Price { get; set; }
         public DateTime PurchaseDate { get; set; }
         public decimal? CurrentPrice { get; set; }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        // Unsubscribe from all symbols and remove event handlers
+        if (_wallet?.Assets != null)
+        {
+            try
+            {
+                // Unsubscribe from price updates
+                MarketPriceClient.OnPriceUpdate -= HandlePriceUpdate;
+
+                // Unsubscribe from each symbol
+                var symbols = _wallet.Assets.Select(a => a.Symbol).Distinct().ToList();
+                foreach (var symbol in symbols)
+                {
+                    await MarketPriceClient.UnsubscribeFromSymbolAsync(symbol);
+                }
+            }
+            catch (Exception ex)
+            {
+                ErrorHandler.HandleException(ex, "Error cleaning up SignalR subscriptions", "WalletDetails.DisposeAsync");
+            }
+        }
     }
 
 }
